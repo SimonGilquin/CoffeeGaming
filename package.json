@@ -1,0 +1,19 @@
+{
+    "name": "Space-Sim",
+    "version": "0.0.1",
+    "author": "Simon Gilquin <@simongilquin>",
+    "dependencies": {
+        "express": "3.3.x"
+    },
+    "engines": {
+        "node": "0.10.x",
+        "npm": "1.2.x"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/simongilquin/SpaceSim.git"
+    },
+    "devDependencies": {
+        "karma":  "0.10.x"
+    }
+}

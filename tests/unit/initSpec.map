@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "initSpec.js",
+  "sourceRoot": "..\\..\\src\\tests\\unit",
+  "sources": [
+    "initSpec.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAAgC,KAAhC,CAAgC,YAAhC;CACK,CAAH,CAAyB,MAAA,EAAzB,SAAA;CADF,EAAgC;CAAhC"
+}
