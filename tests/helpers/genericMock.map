@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "genericMock.js",
+  "sourceRoot": "..\\..\\src\\tests\\helpers",
+  "sources": [
+    "genericMock.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAAuB,CAAA,EAAjB,GAAkB,IAAxB;CACE,OAAA,MAAA;;CAAA,EAAO,CAAP,KAAA;AACA,CAAA,QAAA,CAAA;uBAAA;AAA0B,CAAA,GAAA,CAAe,CAAf;CACxB,CAAY,EAAZ,CAAA,GAAA;QADF;CAAA,IADA;CADqB,UAIrB;CAJF,EAAuB;CAAvB"
+}
