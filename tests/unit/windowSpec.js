@@ -4,8 +4,8 @@
     it('should have one canvas', function() {
       var canvas;
 
-      canvas = document.getElementsByTagName('canvas');
-      return expect(canvas.length).toEqual(1);
+      canvas = getCanvas();
+      return expect(canvas).toBeDefined();
     });
     return it('should have a game', function() {
       return expect(game).toBeDefined();

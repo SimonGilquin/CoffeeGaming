@@ -13,6 +13,9 @@
     it('should be paused by default', function() {
       return expect(game.isPaused()).toBeTruthy();
     });
+    it('can be updated', function() {
+      return expect(typeof game.update).toBe('function');
+    });
     describe('when paused', function() {
       beforeEach(function() {
         return game.pause();

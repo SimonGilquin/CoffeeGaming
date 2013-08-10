@@ -10,18 +10,47 @@
     it('can be drawn', function() {
       return expect(typeof hud.draw).toBe('function');
     });
+    it('has a pause screen', function() {
+      return expect(hud.pauseScreen).toBeDefined();
+    });
     return describe('when the game is paused', function() {
-      var contextMock;
-
-      contextMock = null;
       beforeEach(function() {
-        game.pause();
-        return contextMock = createMockFor(CanvasRenderingContext2D);
+        return game.pause();
       });
-      return it('should display "Game paused"', function() {
-        hud.draw();
-        expect(contextMock.fillText).toHaveBeenCalledWith('Game paused', 500.5, 280);
-        return expect(contextMock.fillText).toHaveBeenCalledWith('Resume...', 500.5, 340);
+      return describe('the pause screen', function() {
+        var screen;
+
+        screen = null;
+        beforeEach(function() {
+          return screen = hud.pauseScreen;
+        });
+        it('should be visible', function() {
+          return expect(screen.visible).toBeTruthy();
+        });
+        it('should display "Game paused"', function() {
+          expect(screen.text.text).toBe('Game paused');
+          expect(screen.text.style).toBe('black');
+          return expect(screen.text.font).toBe('48px sans-serif');
+        });
+        describe('when drawn', function() {
+          var contextMock;
+
+          contextMock = null;
+          beforeEach(function() {
+            return contextMock = createMockFor(CanvasRenderingContext2D);
+          });
+          return it('should have the correct elements', function() {
+            hud.draw();
+            expect(contextMock.fillText).toHaveBeenCalledWith('Game paused', 500.5, 280);
+            return expect(contextMock.fillText).toHaveBeenCalledWith('Resume...', 500, 340);
+          });
+        });
+        return describe('when the mouse is over the resume button', function() {
+          return it('should be highlighted', function() {
+            moveMouseTo(430, 330);
+            return game.update();
+          });
+        });
       });
     });
   });

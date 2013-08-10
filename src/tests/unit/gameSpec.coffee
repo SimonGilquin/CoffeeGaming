@@ -7,6 +7,8 @@ describe 'The game', ->
     expect(game.hud).toBeDefined()
   it 'should be paused by default', ->
     expect(game.isPaused()).toBeTruthy()
+  it 'can be updated', ->
+    expect(typeof game.update).toBe 'function'
   describe 'when paused', ->
     beforeEach ->
       game.pause()

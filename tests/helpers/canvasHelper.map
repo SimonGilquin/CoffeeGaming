@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "canvasHelper.js",
+  "sourceRoot": "..\\..\\src\\tests\\helpers",
+  "sources": [
+    "canvasHelper.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAAmB,GAAb,GAAN;CACW,OAAD,GAAR,SAAA;CADF,EAAmB;CAAnB"
+}
