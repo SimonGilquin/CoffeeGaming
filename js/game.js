@@ -264,7 +264,8 @@
     function Engine() {
       this.update = __bind(this.update, this);
       this.play = __bind(this.play, this);
-      this.pause = __bind(this.pause, this);      this.hud = new Hud();
+      this.pause = __bind(this.pause, this);
+      this.mainLoop = __bind(this.mainLoop, this);      this.hud = new Hud();
     }
 
     Engine.prototype.running = null;
@@ -276,11 +277,15 @@
 
     Engine.prototype.surface = createSurface(800, 600);
 
+    Engine.prototype.mainLoop = function() {
+      this.update();
+      return this.surface.draw();
+    };
+
     Engine.prototype.init = function() {
       var _this = this;
 
-      setInterval(this.surface.draw, 1000 / 60);
-      setInterval(this.update, 1000 / 60);
+      setInterval(this.mainLoop, 1000 / 60);
       canvas.onmousemove = function(e) {
         return _this.events.push({
           type: 'mousemove',

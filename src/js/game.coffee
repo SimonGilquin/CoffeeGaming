@@ -115,9 +115,11 @@ class Engine
     x: null
     y: null
   surface: createSurface 800, 600
+  mainLoop: =>
+    @update()
+    @surface.draw()
   init: ->
-    setInterval @surface.draw, 1000/60
-    setInterval @update, 1000/60
+    setInterval @mainLoop, 1000/60
     canvas.onmousemove = (e) =>
       @events.push
         type: 'mousemove'
