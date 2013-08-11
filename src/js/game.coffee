@@ -117,7 +117,7 @@ class Engine
   surface: createSurface 800, 600
   init: ->
     setInterval @surface.draw, 1000/60
-    setInterval @update, 1
+    setInterval @update, 1000/60
     canvas.onmousemove = (e) =>
       @events.push
         type: 'mousemove'
@@ -134,22 +134,33 @@ class Engine
         x: e.offsetX
         y: e.offsetY
     @
-  pause: ->
+  pause: =>
     @running = false
     @hud.pauseScreen.visible = true
     @hud.pauseButton.visible = false
-  play: ->
+  play: =>
     @running = true
     @hud.pauseScreen.visible = false
     @hud.pauseButton.visible = true
   isPaused: -> return not @running
   events: []
+  handleButton: (button, whenActive) ->
+    if button.isInElement @cursor.x, @cursor.y
+      if @cursor.state == 'down'
+        button.state = 'active'
+      else if @cursor.state == 'up' and button.state == 'active'
+        whenActive()
+        delete button.state
+      else
+        button.state = 'hover'
+    else if button.state == 'hover' or @cursor.state == 'up'
+      delete button.state
+
   update: =>
     while @events.length > 0
       event = @events.shift()
       switch event.type
         when 'mousemove'
-          @cursor.state = null
           @cursor.x = event.x
           @cursor.y = event.y
         when 'mousedown'
@@ -161,26 +172,11 @@ class Engine
           @cursor.x = event.x
           @cursor.y = event.y
       if @isPaused()
-        if @hud.pauseScreen.resumeButton.isInElement @cursor.x, @cursor.y
-          if @cursor.state == 'down'
-            @hud.pauseScreen.resumeButton.state = 'active'
-          else if @cursor.state == 'up' and @hud.pauseScreen.resumeButton.state == 'active'
-            @play()
-          else
-            @hud.pauseScreen.resumeButton.state = 'hover'
-        else if !@hud.pauseScreen.resumeButton.isInElement(@cursor.x, @cursor.y) and @hud.pauseScreen.resumeButton.state == 'hover'
-          delete @hud.pauseScreen.resumeButton.state
+        @handleButton @hud.pauseScreen.resumeButton, @play
       else
-        if @hud.pauseButton.isInElement @cursor.x, @cursor.y
-          if @cursor.state == 'down'
-            @hud.pauseButton.state = 'active'
-          else if @cursor.state == 'up' and @hud.pauseButton.state == 'active'
-            @pause()
-          else
-            @hud.pauseButton.state = 'hover'
-        else if !@hud.pauseButton.isInElement(@cursor.x, @cursor.y) and @hud.pauseButton.state == 'hover'
-          delete @hud.pauseButton.state
+        @handleButton @hud.pauseButton, @pause
 
+      delete @cursor.type if event.type == 'mouseup'
 
 window.game = game =
   buttons: []

@@ -262,7 +262,9 @@
 
   Engine = (function() {
     function Engine() {
-      this.update = __bind(this.update, this);      this.hud = new Hud();
+      this.update = __bind(this.update, this);
+      this.play = __bind(this.play, this);
+      this.pause = __bind(this.pause, this);      this.hud = new Hud();
     }
 
     Engine.prototype.running = null;
@@ -278,7 +280,7 @@
       var _this = this;
 
       setInterval(this.surface.draw, 1000 / 60);
-      setInterval(this.update, 1);
+      setInterval(this.update, 1000 / 60);
       canvas.onmousemove = function(e) {
         return _this.events.push({
           type: 'mousemove',
@@ -321,6 +323,21 @@
 
     Engine.prototype.events = [];
 
+    Engine.prototype.handleButton = function(button, whenActive) {
+      if (button.isInElement(this.cursor.x, this.cursor.y)) {
+        if (this.cursor.state === 'down') {
+          return button.state = 'active';
+        } else if (this.cursor.state === 'up' && button.state === 'active') {
+          whenActive();
+          return delete button.state;
+        } else {
+          return button.state = 'hover';
+        }
+      } else if (button.state === 'hover' || this.cursor.state === 'up') {
+        return delete button.state;
+      }
+    };
+
     Engine.prototype.update = function() {
       var event, _results;
 
@@ -329,7 +346,6 @@
         event = this.events.shift();
         switch (event.type) {
           case 'mousemove':
-            this.cursor.state = null;
             this.cursor.x = event.x;
             this.cursor.y = event.y;
             break;
@@ -344,33 +360,14 @@
             this.cursor.y = event.y;
         }
         if (this.isPaused()) {
-          if (this.hud.pauseScreen.resumeButton.isInElement(this.cursor.x, this.cursor.y)) {
-            if (this.cursor.state === 'down') {
-              _results.push(this.hud.pauseScreen.resumeButton.state = 'active');
-            } else if (this.cursor.state === 'up' && this.hud.pauseScreen.resumeButton.state === 'active') {
-              _results.push(this.play());
-            } else {
-              _results.push(this.hud.pauseScreen.resumeButton.state = 'hover');
-            }
-          } else if (!this.hud.pauseScreen.resumeButton.isInElement(this.cursor.x, this.cursor.y) && this.hud.pauseScreen.resumeButton.state === 'hover') {
-            _results.push(delete this.hud.pauseScreen.resumeButton.state);
-          } else {
-            _results.push(void 0);
-          }
+          this.handleButton(this.hud.pauseScreen.resumeButton, this.play);
         } else {
-          if (this.hud.pauseButton.isInElement(this.cursor.x, this.cursor.y)) {
-            if (this.cursor.state === 'down') {
-              _results.push(this.hud.pauseButton.state = 'active');
-            } else if (this.cursor.state === 'up' && this.hud.pauseButton.state === 'active') {
-              _results.push(this.pause());
-            } else {
-              _results.push(this.hud.pauseButton.state = 'hover');
-            }
-          } else if (!this.hud.pauseButton.isInElement(this.cursor.x, this.cursor.y) && this.hud.pauseButton.state === 'hover') {
-            _results.push(delete this.hud.pauseButton.state);
-          } else {
-            _results.push(void 0);
-          }
+          this.handleButton(this.hud.pauseButton, this.pause);
+        }
+        if (event.type === 'mouseup') {
+          _results.push(delete this.cursor.type);
+        } else {
+          _results.push(void 0);
         }
       }
       return _results;
