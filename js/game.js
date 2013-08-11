@@ -270,6 +270,38 @@
 
     Engine.prototype.running = null;
 
+    Engine.prototype.counters = {
+      start: Date.now(),
+      frames: 0,
+      add: function() {
+        var countersElement, fps, fpsValue;
+
+        countersElement = document.createElement('div');
+        countersElement.setAttribute('class', 'counters');
+        fps = document.createElement('p');
+        fps.innerHTML = 'FPS: ';
+        fpsValue = document.createElement('span');
+        fpsValue.setAttribute('class', 'fps');
+        fps.appendChild(fpsValue);
+        countersElement.appendChild(fps);
+        document.body.appendChild(countersElement);
+        fpsValue.lastUpdate = Date.now();
+        fpsValue.lastFrameCount = 0;
+        return this.update = function() {
+          var now;
+
+          now = Date.now();
+          this.frames++;
+          if (now - fpsValue.lastUpdate > 250) {
+            fpsValue.innerHTML = this.fps = Math.round((this.frames - fpsValue.lastFrameCount) * 1000 / (now - fpsValue.lastUpdate));
+            fpsValue.lastUpdate = now;
+            fpsValue.lastFrameCount = this.frames;
+          }
+          return this.lastUpdate = now;
+        };
+      }
+    };
+
     Engine.prototype.cursor = {
       x: null,
       y: null
@@ -278,14 +310,40 @@
     Engine.prototype.surface = createSurface(800, 600);
 
     Engine.prototype.mainLoop = function() {
+      var _base;
+
       this.update();
-      return this.surface.draw();
+      this.surface.draw();
+      return typeof (_base = this.counters).update === "function" ? _base.update() : void 0;
     };
 
     Engine.prototype.init = function() {
-      var _this = this;
+      var animFrame, recursive,
+        _this = this;
 
-      setInterval(this.mainLoop, 1000 / 60);
+      this.counters.add();
+      animFrame = window.requestAnimationFrame;
+      if (animFrame == null) {
+        window.webkitRequestAnimationFrame;
+      }
+      if (animFrame == null) {
+        window.mozRequestAnimationFrame;
+      }
+      if (animFrame == null) {
+        window.oRequestAnimationFrame;
+      }
+      if (animFrame == null) {
+        window.msRequestAnimationFrame;
+      }
+      if (animFrame != null) {
+        recursive = function() {
+          _this.mainLoop();
+          return animFrame(recursive, canvas);
+        };
+        recursive();
+      } else {
+        setInterval(this.mainLoop, 1000 / 60);
+      }
       canvas.onmousemove = function(e) {
         return _this.events.push({
           type: 'mousemove',

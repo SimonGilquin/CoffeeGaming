@@ -111,6 +111,29 @@ class Engine
   constructor: ->
     @hud = new Hud()
   running: null
+  counters:
+    start: Date.now()
+    frames: 0
+    add: ->
+      countersElement = document.createElement 'div'
+      countersElement.setAttribute 'class', 'counters'
+      fps = document.createElement 'p'
+      fps.innerHTML = 'FPS: '
+      fpsValue = document.createElement 'span'
+      fpsValue.setAttribute 'class', 'fps'
+      fps.appendChild fpsValue
+      countersElement.appendChild fps
+      document.body.appendChild countersElement
+      fpsValue.lastUpdate = Date.now()
+      fpsValue.lastFrameCount = 0
+      @update = ->
+        now = Date.now()
+        @frames++
+        if now - fpsValue.lastUpdate > 250
+          fpsValue.innerHTML = @fps = Math.round((@frames - fpsValue.lastFrameCount) * 1000 / (now - fpsValue.lastUpdate))
+          fpsValue.lastUpdate = now
+          fpsValue.lastFrameCount = @frames
+        @lastUpdate = now
   cursor:
     x: null
     y: null
@@ -118,8 +141,22 @@ class Engine
   mainLoop: =>
     @update()
     @surface.draw()
+    @counters.update?()
   init: ->
-    setInterval @mainLoop, 1000/60
+    @counters.add()
+    #setInterval @mainLoop, 1000/60
+    animFrame = window.requestAnimationFrame
+    window.webkitRequestAnimationFrame unless animFrame?
+    window.mozRequestAnimationFrame unless animFrame?
+    window.oRequestAnimationFrame unless animFrame?
+    window.msRequestAnimationFrame unless animFrame?
+    if animFrame?
+      recursive = =>
+        @mainLoop()
+        animFrame recursive, canvas
+      recursive()
+    else
+      setInterval @mainLoop, 1000/60
     canvas.onmousemove = (e) =>
       @events.push
         type: 'mousemove'
