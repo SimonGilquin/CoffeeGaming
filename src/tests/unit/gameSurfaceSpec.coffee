@@ -3,7 +3,9 @@ describe 'The game surface', ->
   contextMock = null
 
   beforeEach ->
-    surface = game.surface
+    game.load()
+    game.engine.init()
+    surface = game.engine.surface
     contextMock = createMockFor CanvasRenderingContext2D
 
   it 'should be 800 x 600', ->
@@ -21,9 +23,9 @@ describe 'The game surface', ->
 
   describe 'when drawing', ->
     beforeEach ->
-      spyOn game.hud, 'draw'
+      spyOn game.engine.hud, 'draw'
       surface.draw()
     it 'should clear the screen', ->
       expect(contextMock.clearRect).toHaveBeenCalledWith 0, 0, 1001, 601
     it 'should draw the HUD', ->
-      expect(game.hud.draw).toHaveBeenCalled()
+      expect(game.engine.hud.draw).toHaveBeenCalled()

@@ -6,7 +6,9 @@
     surface = null;
     contextMock = null;
     beforeEach(function() {
-      surface = game.surface;
+      game.load();
+      game.engine.init();
+      surface = game.engine.surface;
       return contextMock = createMockFor(CanvasRenderingContext2D);
     });
     it('should be 800 x 600', function() {
@@ -24,14 +26,14 @@
     });
     return describe('when drawing', function() {
       beforeEach(function() {
-        spyOn(game.hud, 'draw');
+        spyOn(game.engine.hud, 'draw');
         return surface.draw();
       });
       it('should clear the screen', function() {
         return expect(contextMock.clearRect).toHaveBeenCalledWith(0, 0, 1001, 601);
       });
       return it('should draw the HUD', function() {
-        return expect(game.hud.draw).toHaveBeenCalled();
+        return expect(game.engine.hud.draw).toHaveBeenCalled();
       });
     });
   });

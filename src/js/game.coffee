@@ -30,15 +30,19 @@ createSurface = (width, height) ->
       context: context
       draw: ->
         context.clearRect 0, 0, canvas.width, canvas.height
-        game.hud.draw()
+        game.engine.hud.draw()
 
 class Drawable
+  visible: true
+  isInElement: (x, y) ->
+    @x <= x <= @x+@w and @y <= y <= @y+@h
   drawFrom: (x, y) ->
-    @drawElement? x, y
-    @drawChildrenFrom @x+x, @y+y
+    if @visible
+      @drawElement? x, y
+      @drawChildrenFrom @x+x, @y+y
   drawChildrenFrom: (x, y) ->
     for id, elem of @
-      elem.drawFrom? x, y
+      elem?.drawFrom? x, y
 
 class Text extends Drawable
   constructor: (@text, @style = 'black', size = 12, @x=0, @y=0) ->
@@ -50,29 +54,47 @@ class Text extends Drawable
     context.font = @font
     context.fillText @text, @x+x, @y+y
 
+class Image extends Drawable
+  constructor: (@x, @y, @url)->
+    game.images[@url] = null
+  drawElement: (x, y) ->
+    context.drawImage game.images[@url], @x+x, @y+y if game.images[@url]?
+
 class Button extends Drawable
-  constructor: (@x, @y, @w, @h, @color = 'black') ->
+  color: '#0aa'
+  activecolor: '#088'
+  hovercolor: '#099'
+  getStateColor: ->
+    switch @state
+      when 'active' then @activecolor
+      when 'hover' then @hovercolor
+      else @color
+  constructor: (@x, @y, @w, @h) ->
+    game.buttons.push @
   drawElement: (x, y)->
-    context.fillStyle = @color
+    context.fillStyle = @getStateColor()
     context.fillRect @x+x, @y+y, @w, @h
   withText: (args...) ->
     @content = new Text args...
     @content.x = @w/2
     @content.y = @h/2
     @
+  withImage: (url) ->
+    @content = new Image 0, 0, 'pause.png'
+    @
 
 class Screen extends Drawable
   visible: false
   constructor: (@x, @y, @w, @h, @background) ->
     @text = new Text 'Game paused', 'black', 48, canvas.width/2, 280
-    @resumeButton = new Button(420, 320, 160, 40, '#00aaaa').withText('Resume...', '#fff', 28)
+    @resumeButton = new Button(420, 320, 160, 40).withText('Resume...', '#fff', 28)
   drawElement: (x, y) ->
-    if @visible
+    if @background
       context.fillStyle = @background
       context.fillRect x+@x, y+@y, canvas.width, canvas.height
-      @drawChildrenFrom @x+x, @y+y
+    @drawChildrenFrom @x+x, @y+y
   draw: ->
-    @drawElement @x, @y
+    @drawFrom @x, @y
 
 class Hud extends Screen
   x: 0
@@ -82,30 +104,100 @@ class Hud extends Screen
   visible: true
   constructor: ->
     @pauseScreen = new Screen @x, @y, @w, @h, '#eee'
+    @pauseButton = new Button(canvas.width-40, 10, 20, 20).withImage('pause.png')
+    delete @background
 
-createGame = ->
-  running = null
+class Engine
+  constructor: ->
+    @hud = new Hud()
+  running: null
+  cursor:
+    x: null
+    y: null
   surface: createSurface 800, 600
-  hud: new Hud()
   init: ->
     setInterval @surface.draw, 1000/60
+    setInterval @update, 1
     canvas.onmousemove = (e) =>
       @events.push
         type: 'mousemove'
         x: e.offsetX
         y: e.offsetY
+    canvas.onmousedown = (e) =>
+      @events.push
+        type: 'mousedown'
+        x: e.offsetX
+        y: e.offsetY
+    canvas.onmouseup = (e) =>
+      @events.push
+        type: 'mouseup'
+        x: e.offsetX
+        y: e.offsetY
     @
   pause: ->
-    running = false
+    @running = false
     @hud.pauseScreen.visible = true
-  play: -> running = true
-  isPaused: -> return not running
+    @hud.pauseButton.visible = false
+  play: ->
+    @running = true
+    @hud.pauseScreen.visible = false
+    @hud.pauseButton.visible = true
+  isPaused: -> return not @running
   events: []
-  update: ->
-#    if @isPaused()
-#      if @hud.pauseScreen.resumeButton
+  update: =>
+    while @events.length > 0
+      event = @events.shift()
+      switch event.type
+        when 'mousemove'
+          @cursor.state = null
+          @cursor.x = event.x
+          @cursor.y = event.y
+        when 'mousedown'
+          @cursor.state = 'down'
+          @cursor.x = event.x
+          @cursor.y = event.y
+        when 'mouseup'
+          @cursor.state = 'up'
+          @cursor.x = event.x
+          @cursor.y = event.y
+      if @isPaused()
+        if @hud.pauseScreen.resumeButton.isInElement @cursor.x, @cursor.y
+          if @cursor.state == 'down'
+            @hud.pauseScreen.resumeButton.state = 'active'
+          else if @cursor.state == 'up' and @hud.pauseScreen.resumeButton.state == 'active'
+            @play()
+          else
+            @hud.pauseScreen.resumeButton.state = 'hover'
+        else if !@hud.pauseScreen.resumeButton.isInElement(@cursor.x, @cursor.y) and @hud.pauseScreen.resumeButton.state == 'hover'
+          delete @hud.pauseScreen.resumeButton.state
+      else
+        if @hud.pauseButton.isInElement @cursor.x, @cursor.y
+          if @cursor.state == 'down'
+            @hud.pauseButton.state = 'active'
+          else if @cursor.state == 'up' and @hud.pauseButton.state == 'active'
+            @pause()
+          else
+            @hud.pauseButton.state = 'hover'
+        else if !@hud.pauseButton.isInElement(@cursor.x, @cursor.y) and @hud.pauseButton.state == 'hover'
+          delete @hud.pauseButton.state
 
-window.game = game = createGame()
 
-game.init().pause()
+window.game = game =
+  buttons: []
+  images: {}
+  load: ->
+    @engine = new Engine()
+    counter = 0
+    for url, image of @images
+      counter++
+      image = new window.Image()
+      image.src = "img/#{url}"
+      image.onload = =>
+        @images[url] = image
+        counter--
+        if counter == 0
+          @engine.init().pause()
+
+game.load()
+#game.init().pause()
 

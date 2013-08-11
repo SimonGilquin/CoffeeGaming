@@ -1,23 +1,27 @@
-describe 'The game', ->
+describe 'The game engine', ->
+  engine = game.engine
+  beforeEach ->
+    game.load()
+    engine.init()
   it 'should have a surface', ->
-    expect(game.surface).toBeDefined()
+    expect(engine.surface).toBeDefined()
   it 'can be initialized', ->
-    expect(game.init).toBeDefined()
+    expect(engine.init).toBeDefined()
   it 'has a HUD', ->
-    expect(game.hud).toBeDefined()
+    expect(engine.hud).toBeDefined()
   it 'should be paused by default', ->
-    expect(game.isPaused()).toBeTruthy()
+    expect(engine.isPaused()).toBeTruthy()
   it 'can be updated', ->
-    expect(typeof game.update).toBe 'function'
+    expect(typeof engine.update).toBe 'function'
   describe 'when paused', ->
     beforeEach ->
-      game.pause()
+      engine.pause()
     it 'can be resumed', ->
-      game.play()
-      expect(game.isPaused()).toBeFalsy()
+      engine.play()
+      expect(engine.isPaused()).toBeFalsy()
   describe 'when started', ->
     beforeEach ->
-      game.play()
+      engine.play()
     it 'can be paused', ->
-      game.pause()
-      expect(game.isPaused()).toBeTruthy()
+      engine.pause()
+      expect(engine.isPaused()).toBeTruthy()

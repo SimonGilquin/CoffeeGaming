@@ -11,6 +11,20 @@
     });
   };
 
+  window.mouseUpAt = function(x, y) {
+    return canvas.onmouseup({
+      offsetX: x,
+      offsetY: y
+    });
+  };
+
+  window.mouseDownAt = function(x, y) {
+    return canvas.onmousedown({
+      offsetX: x,
+      offsetY: y
+    });
+  };
+
 }).call(this);
 
 /*

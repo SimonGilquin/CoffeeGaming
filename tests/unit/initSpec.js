@@ -6,14 +6,18 @@
     canvas = null;
     beforeEach(function() {
       spyOn(window, 'setInterval');
-      return game.init();
+      game.load();
+      return game.engine.init();
     });
     it('should draw the surface 60 times / s', function() {
-      return expect(window.setInterval).toHaveBeenCalledWith(game.surface.draw, 1000 / 60);
+      return expect(window.setInterval).toHaveBeenCalledWith(game.engine.surface.draw, 1000 / 60);
+    });
+    it('should update each ms', function() {
+      return expect(window.setInterval).toHaveBeenCalledWith(game.engine.update, 1);
     });
     return it('should track mouse events', function() {
       moveMouseTo(47, 32);
-      return expect(game.events).toContain({
+      return expect(game.engine.events).toContain({
         type: 'mousemove',
         x: 47,
         y: 32
