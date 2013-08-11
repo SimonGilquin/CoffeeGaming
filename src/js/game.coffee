@@ -32,70 +32,61 @@ createSurface = (width, height) ->
         context.clearRect 0, 0, canvas.width, canvas.height
         game.hud.draw()
 
-drawChildrenFrom = (x, y) ->
-  for id, elem of @
-    elem.drawFrom? x, y
+class Drawable
+  drawFrom: (x, y) ->
+    @drawElement? x, y
+    @drawChildrenFrom @x+x, @y+y
+  drawChildrenFrom: (x, y) ->
+    for id, elem of @
+      elem.drawFrom? x, y
 
-createText = (text, style = 'black', size = 12, x=0, y=0) ->
-  drawFrom = (x, y)->
+class Text extends Drawable
+  constructor: (@text, @style = 'black', size = 12, @x=0, @y=0) ->
+    @font = "#{size}px sans-serif"
+  drawElement: (x, y)->
     context.textBaseline = 'middle'
     context.textAlign = 'center'
     context.fillStyle = @style
     context.font = @font
     context.fillText @text, @x+x, @y+y
-  if typeof text == 'object'
-    text.drawFrom = drawFrom
-  else
-    text: text
-    style: style
-    font: "#{size}px sans-serif"
-    x: x
-    y: y
-    drawFrom: drawFrom
 
-createButton = (x, y, w, h, color = 'black') ->
-  drawChildrenFrom: drawChildrenFrom
-  drawFrom: (x, y)->
+class Button extends Drawable
+  constructor: (@x, @y, @w, @h, @color = 'black') ->
+  drawElement: (x, y)->
     context.fillStyle = @color
     context.fillRect @x+x, @y+y, @w, @h
-    @drawChildrenFrom @x+x, @y+y
-
-  color: color
-  x: x
-  y: y
-  w: w
-  h: h
   withText: (args...) ->
-    @content = createText args...
-    @content.x = w/2
-    @content.y = h/2
+    @content = new Text args...
+    @content.x = @w/2
+    @content.y = @h/2
     @
 
-createHud = ->
+class Screen extends Drawable
+  visible: false
+  constructor: (@x, @y, @w, @h, @background) ->
+    @text = new Text 'Game paused', 'black', 48, canvas.width/2, 280
+    @resumeButton = new Button(420, 320, 160, 40, '#00aaaa').withText('Resume...', '#fff', 28)
+  drawElement: (x, y) ->
+    if @visible
+      context.fillStyle = @background
+      context.fillRect x+@x, y+@y, canvas.width, canvas.height
+      @drawChildrenFrom @x+x, @y+y
+  draw: ->
+    @drawElement @x, @y
+
+class Hud extends Screen
   x: 0
   y: 0
   w: canvas.width
   h: canvas.height
-  drawChildrenFrom: drawChildrenFrom
-  draw: ->
-    @drawChildrenFrom @x, @y
-  pauseScreen:
-    visible: false
-    text: createText 'Game paused', 'black', 48, canvas.width/2, 280
-    resumeButton: createButton(420, 320, 160, 40, '#00aaaa').withText('Resume...', '#fff', 28)
-    drawChildrenFrom: drawChildrenFrom
-    x: 0
-    y: 0
-    drawFrom: (x, y) ->
-      if @visible
-        context.fillStyle = '#eee'
-        context.fillRect x+@x, y+@y, canvas.width, canvas.height
-        @drawChildrenFrom @x+x, @y+y
+  visible: true
+  constructor: ->
+    @pauseScreen = new Screen @x, @y, @w, @h, '#eee'
 
 createGame = ->
   running = null
   surface: createSurface 800, 600
-  hud: createHud()
+  hud: new Hud()
   init: ->
     setInterval @surface.draw, 1000/60
     canvas.onmousemove = (e) =>
