@@ -31,7 +31,9 @@ describe 'The vessel', ->
 
   it 'is stopped', ->
     vessel = engine.createVessel()
-    expect(vessel.speed).toBe 0
+    expect(vessel.vector).toBeEqualTo
+      x: 0
+      y: 0
 
   it 'is in the center of the screen', ->
     vessel = engine.createVessel()
@@ -40,7 +42,7 @@ describe 'The vessel', ->
 
   it 'moves horizontally when having speed', ->
     vessel = engine.createVessel()
-    vessel.speed = 3
+    vessel.vector.x = 3
     x = vessel.position.x
     y = vessel.position.y
     engine.updateVessel vessel
@@ -50,13 +52,13 @@ describe 'The vessel', ->
     expect(vessel.position.x).toBe x + 6
     expect(vessel.position.y).toBe y
 
-  it 'has a vector of 0', ->
+  it 'has an orientation of 0', ->
     vessel = engine.createVessel()
-    expect(vessel.vector).toBe 0
+    expect(vessel.orientation).toBe 0
 
-  it 'has a rotational speed of 0.01', ->
+  it 'has a rotational speed of 0.1', ->
     vessel = engine.createVessel()
-    expect(vessel.rotationalSpeed).toBe 0.01
+    expect(vessel.rotationalSpeed).toBe 0.1
 
   describe 'pressing the thrust key', ->
     beforeEach ->
@@ -67,21 +69,31 @@ describe 'The vessel', ->
       engine.update()
     it 'thrusts the vessel', ->
       expect(engine.vessel.thrust).toBeTruthy()
-    it 'increases the vessel speed', ->
-      oldSpeed = engine.vessel.speed
-      engine.update()
-      expect(engine.vessel.speed).toBeGreaterThan oldSpeed
+    it 'increases the x vector', ->
+      vessel = engine.createVessel()
+      oldVector =
+        x:vessel.vector.x
+        y:vessel.vector.y
+
+      engine.updateVessel vessel
+      expect(vessel.vector).toBeEqualTo
+        x: oldVector.x + vessel.acceleration
+        y: oldVector.y
   describe 'pressing the left key', ->
+    vessel = null
     beforeEach ->
-      engine.play()
-      engine.events.push
-        type: 'keydown'
-        action: 'left'
-      engine.update()
-    it 'increases the vessel speed', ->
-      oldVector = engine.vessel.vector
-      engine.update()
-      expect(engine.vessel.vector).toBeGreaterThan oldVector
+      vessel = engine.createVessel()
+      engine.keyboard.left = true
+      engine.keyboard.thrust = true
+    it 'turns the vessel', ->
+      oldVector = vessel.vector
+      engine.updateVessel vessel
+      expect(vessel.vector).toBeEqualTo
+        x: .1
+        y: 0
+      expect(vessel.orientation).toBe -0.1
+    afterEach ->
+      engine.keyboard.left = false
   describe 'releasing the thrust', ->
     vessel = null
     beforeEach ->

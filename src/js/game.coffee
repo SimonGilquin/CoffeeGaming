@@ -196,15 +196,16 @@ translate = (rad, x, y) ->
   x: Math.cos(rad) * x - Math.sin(rad) * y
   y: Math.sin(rad) * x + Math.cos(rad) * y
 class Vessel
-  acceleration: .1
-  position:
-    x: canvas.width/2
-    y: canvas.height/2
-  rotationalSpeed: .1
-  rotation: 0
-  vector:
-    x: 0
-    y: 0
+  constructor: ->
+    @acceleration = .1
+    @position =
+      x: canvas.width/2
+      y: canvas.height/2
+    @rotationalSpeed = .1
+    @orientation = 0
+    @vector =
+      x: 0
+      y: 0
   draw: ->
     context.beginPath()
     context.fillStyle = '#f00'
@@ -215,7 +216,7 @@ class Vessel
     points.push x:-5, y:-5
     points.push x:5 , y:0
     for point in points
-      t = translate @rotation, point.x, point.y
+      t = translate @orientation, point.x, point.y
       point.x = t.x + @position.x
       point.y = t.y + @position.y
     context.moveTo points[0].x, points[0].y
@@ -391,11 +392,11 @@ class Engine
     vessel.position.y += vessel.vector.y
     vessel.thrust = @keyboard['thrust']
     if vessel.thrust
-      vessel.vector.x += Math.cos(vessel.rotation) * vessel.acceleration
-      vessel.vector.y += Math.sin(vessel.rotation) * vessel.acceleration
-    vessel.rotation -= vessel.rotationalSpeed if @keyboard['left']
-    vessel.rotation += vessel.rotationalSpeed if @keyboard['right']
-    vessel.rotation = vessel.rotation % (2 * Math.PI)
+      vessel.vector.x += Math.cos(vessel.orientation) * vessel.acceleration
+      vessel.vector.y += Math.sin(vessel.orientation) * vessel.acceleration
+    vessel.orientation -= vessel.rotationalSpeed if @keyboard['left']
+    vessel.orientation += vessel.rotationalSpeed if @keyboard['right']
+    vessel.orientation = vessel.orientation % (2 * Math.PI)
 
   updateAsteroids: ->
     for asteroid in @asteroids

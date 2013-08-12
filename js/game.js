@@ -413,23 +413,19 @@
   };
 
   Vessel = (function() {
-    function Vessel() {}
-
-    Vessel.prototype.acceleration = .1;
-
-    Vessel.prototype.position = {
-      x: canvas.width / 2,
-      y: canvas.height / 2
-    };
-
-    Vessel.prototype.rotationalSpeed = .1;
-
-    Vessel.prototype.rotation = 0;
-
-    Vessel.prototype.vector = {
-      x: 0,
-      y: 0
-    };
+    function Vessel() {
+      this.acceleration = .1;
+      this.position = {
+        x: canvas.width / 2,
+        y: canvas.height / 2
+      };
+      this.rotationalSpeed = .1;
+      this.orientation = 0;
+      this.vector = {
+        x: 0,
+        y: 0
+      };
+    }
 
     Vessel.prototype.draw = function() {
       var point, points, t, _i, _j, _len, _len1, _ref;
@@ -459,7 +455,7 @@
       });
       for (_i = 0, _len = points.length; _i < _len; _i++) {
         point = points[_i];
-        t = translate(this.rotation, point.x, point.y);
+        t = translate(this.orientation, point.x, point.y);
         point.x = t.x + this.position.x;
         point.y = t.y + this.position.y;
       }
@@ -728,16 +724,16 @@
       vessel.position.y += vessel.vector.y;
       vessel.thrust = this.keyboard['thrust'];
       if (vessel.thrust) {
-        vessel.vector.x += Math.cos(vessel.rotation) * vessel.acceleration;
-        vessel.vector.y += Math.sin(vessel.rotation) * vessel.acceleration;
+        vessel.vector.x += Math.cos(vessel.orientation) * vessel.acceleration;
+        vessel.vector.y += Math.sin(vessel.orientation) * vessel.acceleration;
       }
       if (this.keyboard['left']) {
-        vessel.rotation -= vessel.rotationalSpeed;
+        vessel.orientation -= vessel.rotationalSpeed;
       }
       if (this.keyboard['right']) {
-        vessel.rotation += vessel.rotationalSpeed;
+        vessel.orientation += vessel.rotationalSpeed;
       }
-      return vessel.rotation = vessel.rotation % (2 * Math.PI);
+      return vessel.orientation = vessel.orientation % (2 * Math.PI);
     };
 
     Engine.prototype.updateAsteroids = function() {

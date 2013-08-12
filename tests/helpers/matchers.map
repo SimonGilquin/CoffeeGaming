@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "matchers.js",
+  "sourceRoot": "..\\..\\src\\tests\\helpers",
+  "sources": [
+    "matchers.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;CAAA,CAAA,CAAyC,IAAlC,CAAS,CAAU,EAA1B;CACE,OAAA,IAAA;;CAAA,CAAA,CAAK,CAAL;AACA,CAAA,QAAA,KAAA;2BAAA;CACE,CAAA,CAAK,CAAO,CAAe,CAA3B;CADF,IADA;CADuC,UAIvC;CAJF,EAAyC;CAAzC"
+}
