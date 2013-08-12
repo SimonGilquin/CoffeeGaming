@@ -15,6 +15,9 @@
       expect(surface.width).toBe(800);
       return expect(surface.height).toBe(600);
     });
+    it('has an initial scale of 1m/px', function() {
+      return expect(surface.scale).toBe(1);
+    });
     it('can drawLine lines', function() {
       surface.drawLine(10, 20, 30, 40);
       expect(contextMock.moveTo).toHaveBeenCalledWith(10.5, 20.5);

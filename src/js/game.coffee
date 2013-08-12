@@ -28,10 +28,12 @@ createSurface = (width, height) ->
         context.lineTo x2+width/2, y2+width/2
         context.stroke()
       context: context
+      scale: 1
       draw: ->
         context.clearRect 0, 0, canvas.width, canvas.height
-        game.engine.hud.draw()
         asteroid.draw() for asteroid in game.engine.asteroids
+        game.engine.vessel.draw()
+        game.engine.hud.draw()
 
 class Drawable
   visible: true
@@ -90,7 +92,7 @@ class Screen extends Drawable
     @text = new Text 'Game paused', 'black', 48, canvas.width/2, 280
     @resumeButton = new Button(420, 320, 160, 40).withText('Resume...', '#fff', 28)
   drawElement: (x, y) ->
-    if @background
+    if @background?
       context.fillStyle = @background
       context.fillRect x+@x, y+@y, canvas.width, canvas.height
     @drawChildrenFrom @x+x, @y+y
@@ -104,7 +106,7 @@ class Hud extends Screen
   h: canvas.height
   visible: true
   constructor: ->
-    @pauseScreen = new Screen @x, @y, @w, @h, '#eee'
+    @pauseScreen = new Screen @x, @y, @w, @h, 'rgba(0,0,0,0.05)' #'#eee'
     @pauseButton = new Button(canvas.width-40, 10, 20, 20).withImage('pause.png')
     delete @background
 
@@ -116,6 +118,33 @@ class Asteroid
     @position =
       x: posX
       y: posY
+  @image: (->
+    tempCanvas = document.createElement 'canvas'
+    tempCanvas.width = 20
+    tempCanvas.height = 20
+    tempContext = tempCanvas.getContext '2d'
+    tempContext.translate(10, 10)
+    tempContext.beginPath()
+    tempContext.fillStyle = '#ccc'
+    tempContext.moveTo -10, -10
+    tempContext.lineTo -5, -5
+    tempContext.lineTo 0, -10
+    tempContext.lineTo +5, -10
+    tempContext.lineTo +10, -5
+    tempContext.lineTo +5, +5
+    tempContext.lineTo +10, +10
+    tempContext.lineTo +5, +10
+    tempContext.lineTo 0, +5
+    tempContext.lineTo -5, +10
+    tempContext.lineTo -10, 0
+    tempContext.lineTo -5, -5
+    tempContext.lineTo -10, -10
+    tempContext.fill()
+    tempContext.getImageData(-10, -10, 20, 20)
+    url = tempCanvas.toDataURL()
+    image = new window.Image()
+    image.src = url
+    image)()
   speed: 1
   direction:
     x: 1
@@ -124,6 +153,10 @@ class Asteroid
     x: 100
     y: 40
   draw: ->
+    #context.drawImage game.images['asteroid.png'], @position.x, @position.y
+    if 0 < @position.x < canvas.width and 0 < @position.y < canvas.height
+      context.drawImage Asteroid.image, @position.x, @position.y
+  xdraw: ->
     context.beginPath()
     context.fillStyle = '#ccc'
     context.moveTo @position.x-10, @position.y-10
@@ -139,7 +172,6 @@ class Asteroid
     context.lineTo @position.x-10, @position.y
     context.lineTo @position.x-5, @position.y-5
     context.lineTo @position.x-10, @position.y-10
-    #context.stroke()
     context.fill()
 
 createAsteroidStore = ->
@@ -150,18 +182,61 @@ createAsteroidStore = ->
     asteroid
   asteroids.randomFill = ->
 
-    for i in [1..4]
-      for j in [1..3]
+    for i in [0...20]
+      for j in [0...15] when not ((i == 9 or i == 10) and j == 7)
         vector = 2*Math.random()*Math.PI
-        asteroids.create i * Math.random() * canvas.width / 4, i * Math.random() * canvas.height / 3, Math.cos(vector), Math.sin(vector), Math.random()
+        pos =
+          x: (i + Math.random()) * canvas.width / 4 - 2 * canvas.width
+          y: (j + Math.random()) * canvas.height / 3 - 2 * canvas.height
+        asteroids.create pos.x, pos.y, Math.cos(vector), Math.sin(vector), Math.random() + 1
+    asteroids
 
   asteroids
+translate = (rad, x, y) ->
+  x: Math.cos(rad) * x - Math.sin(rad) * y
+  y: Math.sin(rad) * x + Math.cos(rad) * y
+class Vessel
+  acceleration: .1
+  position:
+    x: canvas.width/2
+    y: canvas.height/2
+  rotationalSpeed: .1
+  rotation: 0
+  vector:
+    x: 0
+    y: 0
+  draw: ->
+    context.beginPath()
+    context.fillStyle = '#f00'
+    points = []
+    points.push x:5 , y:0
+    points.push x:-5, y:5
+    points.push x:-2, y:0
+    points.push x:-5, y:-5
+    points.push x:5 , y:0
+    for point in points
+      t = translate @rotation, point.x, point.y
+      point.x = t.x + @position.x
+      point.y = t.y + @position.y
+    context.moveTo points[0].x, points[0].y
+    context.lineTo(point.x, point.y) for point in points[1..]
+    context.fill()
 
+keymap =
+  37: 'left'
+  38: 'thrust'
+  39: 'right'
 
 class Engine
   constructor: ->
     @hud = new Hud()
     @asteroids = createAsteroidStore()
+    @vessel = new Vessel()
+    keyboard = {}
+    for code, key of keymap
+      keyboard[key] = false
+    @keyboard = keyboard
+
   running: null
   counters:
     start: Date.now()
@@ -175,27 +250,52 @@ class Engine
       fpsValue.setAttribute 'class', 'fps'
       fps.appendChild fpsValue
       countersElement.appendChild fps
+      updateTime = document.createElement 'p'
+      updateTime.innerHTML = 'Update: '
+      updateTimeValue = document.createElement 'span'
+      updateTimeValue.setAttribute 'class', 'time'
+      updateTime.appendChild updateTimeValue
+      countersElement.appendChild updateTime
+      drawTime = document.createElement 'p'
+      drawTime.innerHTML = 'Draw: '
+      drawTimeValue = document.createElement 'span'
+      drawTimeValue.setAttribute 'class', 'time'
+      drawTime.appendChild drawTimeValue
+      countersElement.appendChild drawTime
       document.body.appendChild countersElement
-      fpsValue.lastUpdate = Date.now()
+
+      fpsValue.lastUpdate = performance.now()
       fpsValue.lastFrameCount = 0
-      @update = ->
-        now = Date.now()
+      oldUpdate = game.engine.update
+      oldDraw = game.engine.draw
+      game.engine.update = =>
+        updateStart = performance.now()
+        oldUpdate()
+        updateTimeValue.innerHTML = Math.round performance.now() - updateStart
+      game.engine.draw = =>
+        drawStart = performance.now()
+        oldDraw()
+        endLoop = performance.now()
+        drawTimeValue.innerHTML = Math.round endLoop - drawStart
         @frames++
-        if now - fpsValue.lastUpdate > 250
-          fpsValue.innerHTML = @fps = Math.round((@frames - fpsValue.lastFrameCount) * 1000 / (now - fpsValue.lastUpdate))
-          fpsValue.lastUpdate = now
+        if endLoop - fpsValue.lastUpdate > 250
+          fpsValue.innerHTML = @fps = Math.round((@frames - fpsValue.lastFrameCount) * 1000 / (endLoop - fpsValue.lastUpdate))
+          fpsValue.lastUpdate = endLoop
           fpsValue.lastFrameCount = @frames
-        @lastUpdate = now
+        @lastUpdate = endLoop
   cursor:
     x: null
     y: null
+  createVessel: ->
+    new Vessel()
   surface: createSurface 800, 600
   mainLoop: =>
     @update()
-    @surface.draw()
-    @counters.update?()
+    @draw()
+    #@counters.update?()
+  draw: => @surface.draw()
   init: ->
-    @counters.add()
+    @counters.add() if performance.now?
     #setInterval @mainLoop, 1000/60
     animFrame = window.requestAnimationFrame
     window.webkitRequestAnimationFrame unless animFrame?
@@ -209,6 +309,16 @@ class Engine
       recursive()
     else
       setInterval @mainLoop, 1000/60
+    document.onkeydown = (e) =>
+      @events.push
+        type: 'keydown'
+        keyCode: e.keyCode
+        action: keymap[e.keyCode]
+    document.onkeyup = (e) =>
+      @events.push
+        type: 'keyup'
+        keyCode: e.keyCode
+        action: keymap[e.keyCode]
     canvas.onmousemove = (e) =>
       @events.push
         type: 'mousemove'
@@ -263,6 +373,10 @@ class Engine
           @cursor.state = 'up'
           @cursor.x = event.x
           @cursor.y = event.y
+        when 'keydown'
+          @keyboard[event.action] = true
+        when 'keyup'
+          @keyboard[event.action] = false
       if @isPaused()
         @handleButton @hud.pauseScreen.resumeButton, @play
       else
@@ -270,20 +384,32 @@ class Engine
       delete @cursor.type if event.type == 'mouseup'
     unless @isPaused()
       @updateAsteroids()
+      @updateVessel @vessel
+
+  updateVessel: (vessel) ->
+    vessel.position.x += vessel.vector.x
+    vessel.position.y += vessel.vector.y
+    vessel.thrust = @keyboard['thrust']
+    if vessel.thrust
+      vessel.vector.x += Math.cos(vessel.rotation) * vessel.acceleration
+      vessel.vector.y += Math.sin(vessel.rotation) * vessel.acceleration
+    vessel.rotation -= vessel.rotationalSpeed if @keyboard['left']
+    vessel.rotation += vessel.rotationalSpeed if @keyboard['right']
+    vessel.rotation = vessel.rotation % (2 * Math.PI)
 
   updateAsteroids: ->
     for asteroid in @asteroids
-      asteroid.position.x += asteroid.direction.x
-      asteroid.position.y += asteroid.direction.y
+      asteroid.position.x += asteroid.direction.x * asteroid.speed
+      asteroid.position.y += asteroid.direction.y * asteroid.speed
 
 window.game = game =
   buttons: []
-  images: {}
+  images:
+    'asteroid.png': null
   load: ->
     @engine = new Engine()
     counter = 0
-    for url, image of @images
-      counter++
+    loadImage = (url) =>
       image = new window.Image()
       image.src = "img/#{url}"
       image.onload = =>
@@ -291,6 +417,10 @@ window.game = game =
         counter--
         if counter == 0
           @engine.init().pause()
+
+    for url of @images
+      counter++
+      loadImage url
   reset: ->
     delete @engine
 

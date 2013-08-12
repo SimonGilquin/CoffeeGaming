@@ -14,10 +14,46 @@ describe 'Upon initialization', ->
     spyOn game.engine, 'mainLoop'
     game.engine.init()
     expect(game.engine.mainLoop).toHaveBeenCalled()
-  it 'should track mouse events', ->
+  it 'should register mouse movements', ->
     game.engine.init()
     moveMouseTo 47, 32
     expect(game.engine.events).toContain
       type: 'mousemove'
       x: 47
       y: 32
+  it 'should register mouse pressing', ->
+    game.engine.init()
+    mouseDownAt 47, 32
+    expect(game.engine.events).toContain
+      type: 'mousedown'
+      x: 47
+      y: 32
+  it 'should register mouse releasing', ->
+    game.engine.init()
+    mouseUpAt 47, 32
+    expect(game.engine.events).toContain
+      type: 'mouseup'
+      x: 47
+      y: 32
+
+  it 'should register key pressing', ->
+    game.engine.init()
+    pressKey 23
+    expect(game.engine.events[0].type).toBe 'keydown'
+    expect(game.engine.events[0].keyCode).toBe 23
+
+  describe 'the key mapping', ->
+    beforeEach ->
+      game.engine.init()
+    it 'maps up to thrust', ->
+      pressKey 38
+      expect(game.engine.events[0].action).toBe 'thrust'
+
+  describe 'the update loop', ->
+    it 'consumes the events', ->
+      game.engine.init()
+      moveMouseTo 47, 32
+      mouseDownAt 47, 32
+      game.engine.update()
+      expect(game.engine.events.length).toBe 0
+

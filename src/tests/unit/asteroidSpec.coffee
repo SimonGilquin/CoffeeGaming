@@ -22,8 +22,8 @@ describe 'Asteroids', ->
     engine.update()
     expect(engine.updateAsteroids).not.toHaveBeenCalled()
 
-  it 'has 12 asteroids', ->
-    expect(engine.asteroids.length).toBe 12
+  it 'has some asteroids', ->
+    expect(engine.asteroids.length > 0).toBeTruthy()
 
   it 'have a speed of 1px/s', ->
     asteroid = engine.asteroids.create()

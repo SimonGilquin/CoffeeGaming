@@ -27,8 +27,8 @@
       engine.update();
       return expect(engine.updateAsteroids).not.toHaveBeenCalled();
     });
-    it('has 12 asteroids', function() {
-      return expect(engine.asteroids.length).toBe(12);
+    it('has some asteroids', function() {
+      return expect(engine.asteroids.length > 0).toBeTruthy();
     });
     it('have a speed of 1px/s', function() {
       var asteroid;

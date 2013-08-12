@@ -12,6 +12,9 @@ describe 'The game surface', ->
     expect(surface.width).toBe 800
     expect(surface.height).toBe 600
 
+  it 'has an initial scale of 1m/px', ->
+    expect(surface.scale).toBe(1)
+
   it 'can drawLine lines', ->
     surface.drawLine 10, 20, 30, 40
     expect(contextMock.moveTo).toHaveBeenCalledWith 10.5, 20.5
