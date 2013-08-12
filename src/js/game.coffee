@@ -31,6 +31,7 @@ createSurface = (width, height) ->
       draw: ->
         context.clearRect 0, 0, canvas.width, canvas.height
         game.engine.hud.draw()
+        asteroid.draw() for asteroid in game.engine.asteroids
 
 class Drawable
   visible: true
@@ -107,9 +108,60 @@ class Hud extends Screen
     @pauseButton = new Button(canvas.width-40, 10, 20, 20).withImage('pause.png')
     delete @background
 
+class Asteroid
+  constructor: (posX = 100, posY = 40, vectorX = 1, vectorY = 0, @speed = 1) ->
+    @direction =
+      x: vectorX
+      y: vectorY
+    @position =
+      x: posX
+      y: posY
+  speed: 1
+  direction:
+    x: 1
+    y: 0
+  position:
+    x: 100
+    y: 40
+  draw: ->
+    context.beginPath()
+    context.fillStyle = '#ccc'
+    context.moveTo @position.x-10, @position.y-10
+    context.lineTo @position.x-5, @position.y-5
+    context.lineTo @position.x, @position.y-10
+    context.lineTo @position.x+5, @position.y-10
+    context.lineTo @position.x+10, @position.y-5
+    context.lineTo @position.x+5, @position.y+5
+    context.lineTo @position.x+10, @position.y+10
+    context.lineTo @position.x+5, @position.y+10
+    context.lineTo @position.x, @position.y+5
+    context.lineTo @position.x-5, @position.y+10
+    context.lineTo @position.x-10, @position.y
+    context.lineTo @position.x-5, @position.y-5
+    context.lineTo @position.x-10, @position.y-10
+    #context.stroke()
+    context.fill()
+
+createAsteroidStore = ->
+  asteroids = []
+  asteroids.create = (args...) ->
+    asteroid = new Asteroid args...
+    @push asteroid
+    asteroid
+  asteroids.randomFill = ->
+
+    for i in [1..4]
+      for j in [1..3]
+        vector = 2*Math.random()*Math.PI
+        asteroids.create i * Math.random() * canvas.width / 4, i * Math.random() * canvas.height / 3, Math.cos(vector), Math.sin(vector), Math.random()
+
+  asteroids
+
+
 class Engine
   constructor: ->
     @hud = new Hud()
+    @asteroids = createAsteroidStore()
   running: null
   counters:
     start: Date.now()
@@ -172,6 +224,8 @@ class Engine
         type: 'mouseup'
         x: e.offsetX
         y: e.offsetY
+
+    @asteroids.randomFill()
     @
   pause: =>
     @running = false
@@ -194,7 +248,6 @@ class Engine
         button.state = 'hover'
     else if button.state == 'hover' or @cursor.state == 'up'
       delete button.state
-
   update: =>
     while @events.length > 0
       event = @events.shift()
@@ -214,8 +267,14 @@ class Engine
         @handleButton @hud.pauseScreen.resumeButton, @play
       else
         @handleButton @hud.pauseButton, @pause
-
       delete @cursor.type if event.type == 'mouseup'
+    unless @isPaused()
+      @updateAsteroids()
+
+  updateAsteroids: ->
+    for asteroid in @asteroids
+      asteroid.position.x += asteroid.direction.x
+      asteroid.position.y += asteroid.direction.y
 
 window.game = game =
   buttons: []
@@ -232,6 +291,8 @@ window.game = game =
         counter--
         if counter == 0
           @engine.init().pause()
+  reset: ->
+    delete @engine
 
 game.load()
 #game.init().pause()
