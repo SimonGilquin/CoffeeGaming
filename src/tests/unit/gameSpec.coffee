@@ -5,8 +5,9 @@ describe 'The game engine', ->
     engine.init()
   it 'should have a surface', ->
     expect(engine.surface).toBeDefined()
-  it 'can be initialized', ->
+  xit 'can be initialized', ->
     expect(engine.init).toBeDefined()
+    expect(typeof engine.init).toBe 'function'
   it 'has a HUD', ->
     expect(engine.hud).toBeDefined()
   it 'should be paused by default', ->
@@ -25,3 +26,9 @@ describe 'The game engine', ->
     it 'can be paused', ->
       engine.pause()
       expect(engine.isPaused()).toBeTruthy()
+  describe 'performance counters', ->
+    it 'should work when there is no performance.now()', ->
+      old = window.performance
+      window.performance = null
+      engine.init()
+      window.performance = old
