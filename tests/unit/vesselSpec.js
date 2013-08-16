@@ -42,11 +42,11 @@
         y: 0
       });
     });
-    it('is in the center of the screen', function() {
+    it('is in the center of the game surface', function() {
       var vessel;
       vessel = engine.createVessel();
-      expect(vessel.position.x).toBe(canvas.width / 2);
-      return expect(vessel.position.y).toBe(canvas.height / 2);
+      expect(vessel.position.x).toBe(engine.surface.width / 2);
+      return expect(vessel.position.y).toBe(engine.surface.height / 2);
     });
     it('moves horizontally when having speed', function() {
       var vessel, x, y;

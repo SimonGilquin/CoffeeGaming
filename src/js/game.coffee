@@ -16,6 +16,7 @@ canvas.height = window.innerHeight
 document.body.appendChild canvas
 context = canvas.getContext '2d'
 enableLog(context) if debug
+surface = null
 
 createSurface = ->
   surface =
@@ -140,10 +141,13 @@ class Asteroid
   position:
     x: 100
     y: 40
-  draw: ->
+  drawAt: (x, y)->
+    drawnAt =
+      x: @position.x - x
+      y: @position.y - y
     #context.drawImage game.images['asteroid.png'], @position.x, @position.y
-    if 0 < @position.x < canvas.width and 0 < @position.y < canvas.height
-      context.drawImage Asteroid.image, @position.x, @position.y
+    #if 0 < @position.x < canvas.width and 0 < @position.y < canvas.height
+    context.drawImage Asteroid.image, drawnAt.x, drawnAt.y
   xdraw: ->
     context.beginPath()
     context.fillStyle = '#ccc'
@@ -188,17 +192,17 @@ translate = (rad, x, y) ->
   x: Math.cos(rad) * x - Math.sin(rad) * y
   y: Math.sin(rad) * x + Math.cos(rad) * y
 class Vessel
-  constructor: (x = canvas.width / 2, y = canvas.height / 2) ->
+  constructor: (x, y) ->
     @acceleration = .1
     @position =
-      x: x
-      y: y
+      x: x or surface.width / 2
+      y: y or surface.height / 2
     @rotationalSpeed = .1
     @orientation = 0
     @vector =
       x: 0
       y: 0
-  draw: ->
+  drawAt: (x, y)->
     context.beginPath()
     context.fillStyle = '#f00'
     points = []
@@ -209,8 +213,8 @@ class Vessel
     points.push x:5 , y:0
     for point in points
       t = translate @orientation, point.x, point.y
-      point.x = t.x + @position.x
-      point.y = t.y + @position.y
+      point.x = t.x + @position.x - x
+      point.y = t.y + @position.y - y
     context.moveTo points[0].x, points[0].y
     context.lineTo(point.x, point.y) for point in points[1..]
     context.fill()
@@ -231,14 +235,18 @@ class Engine
       keyboard[key] = false
     @keyboard = keyboard
     @viewport =
-      x: @surface.width / 2
-      y: @surface.height / 2
+      x: @surface.width / 2 - canvas.width / 2
+      y: @surface.height / 2 - canvas.height / 2
       width: canvas.width
       height: canvas.height
       draw: ->
         context.clearRect 0, 0, canvas.width, canvas.height
-        asteroid.draw() for asteroid in game.engine.asteroids
-        game.engine.vessel.draw()
+        @x = game.engine.vessel.position.x - canvas.width / 2
+        @y = game.engine.vessel.position.y - canvas.height / 2
+        context.drawImage game.images['space.jpg'], @x, @y, @width, @height, 0, 0, surface.width, surface.height
+
+        asteroid.drawAt(@x, @y) for asteroid in game.engine.asteroids
+        game.engine.vessel.drawAt @x, @y
         game.engine.hud.draw()
 
   running: null
@@ -420,6 +428,7 @@ window.game = game =
   buttons: []
   images:
     'asteroid.png': null
+    'space.jpg' : null
   load: ->
     @engine = new Engine()
     counter = 0

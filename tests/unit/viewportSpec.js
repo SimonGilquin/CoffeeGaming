@@ -25,8 +25,8 @@
       return expect(engine.viewport.height).toBe(canvas.height);
     });
     it('is positioned on center of the game surface', function() {
-      expect(viewport.x).toBe(engine.surface.width / 2);
-      return expect(viewport.y).toBe(engine.surface.height / 2);
+      expect(viewport.x).toBe(engine.surface.width / 2 - canvas.width / 2);
+      return expect(viewport.y).toBe(engine.surface.height / 2 - canvas.height / 2);
     });
     it('can be drawn', function() {
       expect(viewport.draw).toBeDefined();

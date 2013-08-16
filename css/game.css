@@ -16,6 +16,7 @@ canvas{
     position: absolute;
     top: 0;
     left: 0;
+    color: white;
 }
 
     .counters p {
