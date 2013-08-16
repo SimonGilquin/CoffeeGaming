@@ -14,6 +14,6 @@
         "url": "https://github.com/simongilquin/SpaceSim.git"
     },
     "devDependencies": {
-        "karma":  "0.10.x"
+        "karma-jasmine":  "0.10.x"
     }
 }

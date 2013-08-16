@@ -11,6 +11,7 @@ module.exports = function(config) {
     // frameworks to use
     frameworks: ['jasmine'],
 
+    plugins: ['karma-jasmine', 'karma-osx-reporter'],
 
     // list of files / patterns to load in the browser
     files: [
@@ -27,7 +28,7 @@ module.exports = function(config) {
 
     // tests results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['progress'],
+    reporters: ['progress', 'osx', 'coverage', 'growl'],
 
 
     // web server port
