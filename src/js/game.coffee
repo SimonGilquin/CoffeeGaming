@@ -296,7 +296,7 @@ class Engine
     #@counters.update?()
   draw: => @surface.draw()
   init: ->
-    @counters.add() if performance.now?
+    @counters.add() if performance?.now?
     #setInterval @mainLoop, 1000/60
     animFrame = window.requestAnimationFrame
     window.webkitRequestAnimationFrame unless animFrame?

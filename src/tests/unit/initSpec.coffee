@@ -1,11 +1,16 @@
 describe 'Upon initialization', ->
   canvas = null
   beforeEach ->
-    spyOn window, 'setInterval'
     game.load()
-  xit 'should update 60 times / s', ->
+  it 'should update 60 times / s if there is no animation frames', ->
+    spyOn window, 'setInterval'
+    oldRequestAnimationFrame = window.requestAnimationFrame
+    oldWebkitRequestAnimationFrame = window.webkitRequestAnimationFrame = null
+    window.requestAnimationFrame = window.webkitRequestAnimationFrame = null
     game.engine.init()
     expect(window.setInterval).toHaveBeenCalledWith game.engine.mainLoop, 1000/60
+    window.webkitRequestAnimationFrame = oldWebkitRequestAnimationFrame
+    window.requestAnimationFrame = oldRequestAnimationFrame
   it 'should loop on the chrome animation frame', ->
     spyOn window, 'requestAnimationFrame'
     game.engine.init()
