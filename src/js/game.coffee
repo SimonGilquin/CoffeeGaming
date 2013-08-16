@@ -164,8 +164,8 @@ class Asteroid
     x: 100
     y: 40
   draw: ->
-    if 0 < @position.x < canvas.width and 0 < @position.y < canvas.height
-      context.drawImage @image, @position.x, @position.y
+    if 0 <= @position.x + 10 <= canvas.width + 20 and 0 <= @position.y + 10 <= canvas.height + 20
+      context.drawImage @image, @position.x - 10, @position.y - 10
 
 createAsteroidStore = ->
   asteroids = []
@@ -185,9 +185,11 @@ createAsteroidStore = ->
     asteroids
 
   asteroids
+
 translate = (rad, x, y) ->
   x: Math.cos(rad) * x - Math.sin(rad) * y
   y: Math.sin(rad) * x + Math.cos(rad) * y
+
 class Vessel
   constructor: ->
     @acceleration = .1
@@ -201,13 +203,13 @@ class Vessel
       y: 0
   draw: ->
     context.beginPath()
-    context.fillStyle = '#f00'
+    context.fillStyle = if @collides then '#0ff' else '#f00'
     points = []
-    points.push x:5 , y:0
-    points.push x:-5, y:5
-    points.push x:-2, y:0
-    points.push x:-5, y:-5
-    points.push x:5 , y:0
+    points.push x:10 , y:0
+    points.push x:-10, y:10
+    points.push x:-5, y:0
+    points.push x:-10, y:-10
+    points.push x:10 , y:0
     for point in points
       t = translate @orientation, point.x, point.y
       point.x = t.x + @position.x
@@ -215,6 +217,9 @@ class Vessel
     context.moveTo points[0].x, points[0].y
     context.lineTo(point.x, point.y) for point in points[1..]
     context.fill()
+
+  distanceFrom : (object) ->
+    Math.sqrt(Math.pow(object.position.x - @position.x, 2) + Math.pow(object.position.y - @position.y, 2))
 
 keymap =
   37: 'left'
@@ -231,6 +236,7 @@ class Engine
     for code, key of keymap
       keyboard[key] = false
     @keyboard = keyboard
+    @collisions = []
 
   running: null
   counters:
@@ -239,44 +245,43 @@ class Engine
     add: ->
       countersElement = document.createElement 'div'
       countersElement.setAttribute 'class', 'counters'
-      fps = document.createElement 'p'
-      fps.innerHTML = 'FPS: '
-      fpsValue = document.createElement 'span'
-      fpsValue.setAttribute 'class', 'fps'
-      fps.appendChild fpsValue
-      countersElement.appendChild fps
-      updateTime = document.createElement 'p'
-      updateTime.innerHTML = 'Update: '
-      updateTimeValue = document.createElement 'span'
-      updateTimeValue.setAttribute 'class', 'time'
-      updateTime.appendChild updateTimeValue
-      countersElement.appendChild updateTime
-      drawTime = document.createElement 'p'
-      drawTime.innerHTML = 'Draw: '
-      drawTimeValue = document.createElement 'span'
-      drawTimeValue.setAttribute 'class', 'time'
-      drawTime.appendChild drawTimeValue
-      countersElement.appendChild drawTime
+
+      createCounter = (title) ->
+        counter = document.createElement 'p'
+        counter.innerHTML = title + ': '
+        counterValue = document.createElement 'span'
+        counterValue.setAttribute 'class', title.replace(' ', '-').toLowerCase()
+        counter.appendChild counterValue
+        countersElement.appendChild counter
+        counterValue
+
+      fps = createCounter('FPS')
+      updateTime = createCounter('Update')
+      drawTime = createCounter('Draw')
+      collisions = createCounter('Collisions')
+
       document.body.appendChild countersElement
 
-      fpsValue.lastUpdate = performance.now()
-      fpsValue.lastFrameCount = 0
+      fps.lastUpdate = performance.now()
+      fps.lastFrameCount = 0
       oldUpdate = game.engine.update
       oldDraw = game.engine.draw
+      collisions.total = 0
       game.engine.update = =>
         updateStart = performance.now()
         oldUpdate()
-        updateTimeValue.innerHTML = Math.round performance.now() - updateStart
+        collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
+        updateTime.innerHTML = Math.round performance.now() - updateStart
       game.engine.draw = =>
         drawStart = performance.now()
         oldDraw()
         endLoop = performance.now()
-        drawTimeValue.innerHTML = Math.round endLoop - drawStart
+        drawTime.innerHTML = Math.round endLoop - drawStart
         @frames++
-        if endLoop - fpsValue.lastUpdate > 250
-          fpsValue.innerHTML = @fps = Math.round((@frames - fpsValue.lastFrameCount) * 1000 / (endLoop - fpsValue.lastUpdate))
-          fpsValue.lastUpdate = endLoop
-          fpsValue.lastFrameCount = @frames
+        if endLoop - fps.lastUpdate > 250
+          fps.innerHTML = @fps = Math.round((@frames - fps.lastFrameCount) * 1000 / (endLoop - fps.lastUpdate))
+          fps.lastUpdate = endLoop
+          fps.lastFrameCount = @frames
         @lastUpdate = endLoop
   cursor:
     x: null
@@ -287,11 +292,9 @@ class Engine
   mainLoop: =>
     @update()
     @draw()
-    #@counters.update?()
   draw: => @surface.draw()
   init: ->
     @counters.add() if performance?.now?
-    #setInterval @mainLoop, 1000/60
     animFrame = window.requestAnimationFrame
     window.webkitRequestAnimationFrame unless animFrame?
     window.mozRequestAnimationFrame unless animFrame?
@@ -380,8 +383,26 @@ class Engine
         @handleButton @hud.pauseButton, @pause
       delete @cursor.type if event.type == 'mouseup'
     unless @isPaused()
+      @updateCollisions @vessel, @asteroids
       @updateAsteroids()
       @updateVessel @vessel
+
+  updateCollisions: (vessel, asteroids) ->
+    # reset old collisions
+    for collision in @collisions
+      collision.source.collides = false
+      collision.target.collides = false
+
+    firstpass = []
+    for asteroid in asteroids when vessel.distanceFrom(asteroid) < 20
+      firstpass.push
+        source: vessel
+        target: asteroid
+    @collisions = firstpass
+    for collision in @collisions
+      collision.source.collides = true
+      collision.target.collides = true
+  #game.engine.collisions.push 'Vessel crashed into asteroid!' if collisions.length > 0
 
   updateVessel: (vessel) ->
     vessel.position.x += vessel.vector.x

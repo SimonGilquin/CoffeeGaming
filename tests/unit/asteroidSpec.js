@@ -47,16 +47,12 @@
       return expect(asteroid.position.y).toBe(40);
     });
     return describe('update logic', function() {
-      it('moves the asteroid by its speed and direction', function() {
+      return it('moves the asteroid by its speed and direction', function() {
         var asteroid;
         asteroid = engine.asteroids.create();
         engine.updateAsteroids();
         expect(asteroid.position.x).toBe(101);
         return expect(asteroid.position.y).toBe(40);
-      });
-      return xit('creates an asteroid when there is none', function() {
-        engine.updateAsteroids();
-        return expect(engine.asteroids.length).toBe(1);
       });
     });
   });
