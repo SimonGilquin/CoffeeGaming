@@ -21,7 +21,7 @@
     afterEach(function() {
       return window.Image = oldImage;
     });
-    return describe('first pass', function() {
+    describe('first pass', function() {
       it('should be empty when distances are high', function() {
         asteroids.push({
           position: {
@@ -89,6 +89,35 @@
         expect(engine.collisions[0].source).toBe(vessel);
         return expect(engine.collisions[0].target).toBe(asteroids[1]);
       });
+    });
+    it('should be known be the collided', function() {
+      var asteroid;
+      asteroids.push(asteroid = {
+        position: {
+          x: vessel.position.x + 10,
+          y: vessel.position.y + 10
+        }
+      });
+      engine.updateCollisions(vessel, asteroids);
+      expect(vessel.collides).toBeTruthy();
+      return expect(asteroid.collides).toBeTruthy();
+    });
+    return it('should be resetted after a collision passes', function() {
+      var asteroid;
+      asteroids.push(asteroid = {
+        position: {
+          x: vessel.position.x + 10,
+          y: vessel.position.y + 10
+        }
+      });
+      engine.updateCollisions(vessel, asteroids);
+      asteroid.position = {
+        x: 100,
+        y: 100
+      };
+      engine.updateCollisions(vessel, asteroids);
+      expect(vessel.collides).toBeFalsy();
+      return expect(asteroid.collides).toBeFalsy();
     });
   });
 

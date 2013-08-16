@@ -331,8 +331,8 @@
 
     Asteroid.prototype.draw = function() {
       var _ref, _ref1;
-      if ((0 < (_ref = this.position.x) && _ref < canvas.width) && (0 < (_ref1 = this.position.y) && _ref1 < canvas.height)) {
-        return context.drawImage(Asteroid.image, this.position.x, this.position.y);
+      if ((0 <= (_ref = this.position.x + 10) && _ref <= canvas.width + 20) && (0 <= (_ref1 = this.position.y + 10) && _ref1 <= canvas.height + 20)) {
+        return context.drawImage(Asteroid.image, this.position.x - 10, this.position.y - 10);
       }
     };
 
@@ -418,7 +418,7 @@
     Vessel.prototype.draw = function() {
       var point, points, t, _i, _j, _len, _len1, _ref;
       context.beginPath();
-      context.fillStyle = '#f00';
+      context.fillStyle = this.collides ? '#0ff' : '#f00';
       points = [];
       points.push({
         x: 10,
@@ -705,10 +705,16 @@
     };
 
     Engine.prototype.updateCollisions = function(vessel, asteroids) {
-      var asteroid, firstpass, _i, _len;
+      var asteroid, collision, firstpass, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _results;
+      _ref = this.collisions;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        collision = _ref[_i];
+        collision.source.collides = false;
+        collision.target.collides = false;
+      }
       firstpass = [];
-      for (_i = 0, _len = asteroids.length; _i < _len; _i++) {
-        asteroid = asteroids[_i];
+      for (_j = 0, _len1 = asteroids.length; _j < _len1; _j++) {
+        asteroid = asteroids[_j];
         if (vessel.distanceFrom(asteroid) < 20) {
           firstpass.push({
             source: vessel,
@@ -716,7 +722,15 @@
           });
         }
       }
-      return this.collisions = firstpass;
+      this.collisions = firstpass;
+      _ref1 = this.collisions;
+      _results = [];
+      for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
+        collision = _ref1[_k];
+        collision.source.collides = true;
+        _results.push(collision.target.collides = true);
+      }
+      return _results;
     };
 
     Engine.prototype.updateVessel = function(vessel) {

@@ -154,8 +154,8 @@ class Asteroid
     y: 40
   draw: ->
     #context.drawImage game.images['asteroid.png'], @position.x, @position.y
-    if 0 < @position.x < canvas.width and 0 < @position.y < canvas.height
-      context.drawImage Asteroid.image, @position.x, @position.y
+    if 0 <= @position.x + 10 <= canvas.width + 20 and 0 <= @position.y + 10 <= canvas.height + 20
+      context.drawImage Asteroid.image, @position.x - 10, @position.y - 10
   xdraw: ->
     context.beginPath()
     context.fillStyle = '#ccc'
@@ -192,9 +192,11 @@ createAsteroidStore = ->
     asteroids
 
   asteroids
+
 translate = (rad, x, y) ->
   x: Math.cos(rad) * x - Math.sin(rad) * y
   y: Math.sin(rad) * x + Math.cos(rad) * y
+
 class Vessel
   constructor: ->
     @acceleration = .1
@@ -208,7 +210,7 @@ class Vessel
       y: 0
   draw: ->
     context.beginPath()
-    context.fillStyle = '#f00'
+    context.fillStyle = if @collides then '#0ff' else '#f00'
     points = []
     points.push x:10 , y:0
     points.push x:-10, y:10
@@ -390,12 +392,20 @@ class Engine
       @updateVessel @vessel
 
   updateCollisions: (vessel, asteroids) ->
+    # reset old collisions
+    for collision in @collisions
+      collision.source.collides = false
+      collision.target.collides = false
+
     firstpass = []
     for asteroid in asteroids when vessel.distanceFrom(asteroid) < 20
       firstpass.push
         source: vessel
         target: asteroid
     @collisions = firstpass
+    for collision in @collisions
+      collision.source.collides = true
+      collision.target.collides = true
   #game.engine.collisions.push 'Vessel crashed into asteroid!' if collisions.length > 0
 
   updateVessel: (vessel) ->

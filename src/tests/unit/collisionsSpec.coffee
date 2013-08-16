@@ -64,4 +64,24 @@ describe 'Collisions', ->
       engine.updateCollisions vessel, asteroids
       expect(engine.collisions[0].source).toBe vessel
       expect(engine.collisions[0].target).toBe asteroids[1]
+  it 'should be known be the collided', ->
+    asteroids.push asteroid =
+      position:
+        x: vessel.position.x + 10
+        y: vessel.position.y + 10
+    engine.updateCollisions vessel, asteroids
+    expect(vessel.collides).toBeTruthy()
+    expect(asteroid.collides).toBeTruthy()
+  it 'should be resetted after a collision passes', ->
+    asteroids.push asteroid =
+      position:
+        x: vessel.position.x + 10
+        y: vessel.position.y + 10
+    engine.updateCollisions vessel, asteroids
+    asteroid.position =
+      x: 100
+      y: 100
+    engine.updateCollisions vessel, asteroids
+    expect(vessel.collides).toBeFalsy()
+    expect(asteroid.collides).toBeFalsy()
 
