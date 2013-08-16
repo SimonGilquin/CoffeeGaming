@@ -244,7 +244,7 @@ class Engine
         context.clearRect 0, 0, canvas.width, canvas.height
         @x = game.engine.vessel.position.x - canvas.width / 2
         @y = game.engine.vessel.position.y - canvas.height / 2
-        context.drawImage game.images['space.jpg'], @x, @y, @width, @height, 0, 0, surface.width, surface.height
+        context.drawImage game.images['space.jpg'], @x, @y, @width, @height, 0, 0, @width, @height
 
         asteroid.drawAt(@x, @y) for asteroid in game.engine.asteroids
         game.engine.vessel.drawAt @x, @y

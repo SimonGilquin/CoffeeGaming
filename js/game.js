@@ -481,7 +481,7 @@
           context.clearRect(0, 0, canvas.width, canvas.height);
           this.x = game.engine.vessel.position.x - canvas.width / 2;
           this.y = game.engine.vessel.position.y - canvas.height / 2;
-          context.drawImage(game.images['space.jpg'], this.x, this.y, this.width, this.height, 0, 0, surface.width, surface.height);
+          context.drawImage(game.images['space.jpg'], this.x, this.y, this.width, this.height, 0, 0, this.width, this.height);
           _ref = game.engine.asteroids;
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             asteroid = _ref[_i];
