@@ -10,6 +10,9 @@ enableLog = (object) ->
     overload id, object
   true
 
+distanceBetween = (pointA, pointB) ->
+  Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2))
+
 canvas = document.createElement 'canvas'
 canvas.width = 1001
 canvas.height = 601
@@ -118,34 +121,42 @@ class Asteroid
     @position =
       x: posX
       y: posY
-  @image: (->
-    tempCanvas = document.createElement 'canvas'
-    tempCanvas.width = 20
-    tempCanvas.height = 20
-    tempContext = tempCanvas.getContext '2d'
-    tempContext.translate(10, 10)
-    tempContext.beginPath()
-    tempContext.fillStyle = '#ccc'
-    tempContext.moveTo -10, -10
-    tempContext.lineTo -5, -5
-    tempContext.lineTo 0, -10
-    tempContext.lineTo +5, -10
-    tempContext.lineTo +10, -5
-    tempContext.lineTo +5, +5
-    tempContext.lineTo +10, +10
-    tempContext.lineTo +5, +10
-    tempContext.lineTo 0, +5
-    tempContext.lineTo -5, +10
-    tempContext.lineTo -10, 0
-    tempContext.lineTo -5, -5
-    tempContext.lineTo -10, -10
-    tempContext.fill()
-    tempContext.getImageData(-10, -10, 20, 20)
-    url = tempCanvas.toDataURL()
-    image = new window.Image()
-    image.src = url
-    image)()
+    @image = (=>
+      tempCanvas = document.createElement 'canvas'
+      tempCanvas.width = @size
+      tempCanvas.height = @size
+      tempContext = tempCanvas.getContext '2d'
+      tempContext.translate(@size/2, @size/2)
+      tempContext.beginPath()
+      tempContext.fillStyle = '#ccc'
+
+      initialAngle = (Math.random() + 3) * Math.PI / @facets
+      angle = initialAngle
+      until closed
+        if angle - initialAngle >= 2* Math.PI
+          context.lineTo firstPoint.x, firstPoint.y
+          closed = true
+        else
+          distance = (Math.random() + 4) * @size / 10
+          point =
+            x: Math.cos(angle) * distance
+            y: Math.sin(angle) * distance
+          if firstPoint?
+            tempContext.lineTo point.x, point.y
+          else
+            firstPoint = point
+            tempContext.moveTo point.x, point.y
+        angle += (Math.random() + 3) * Math.PI / @facets
+
+      tempContext.fill()
+      tempContext.getImageData(@size * -.5, @size * -.5, @size, @size)
+      url = tempCanvas.toDataURL()
+      image = new window.Image()
+      image.src = url
+      image)()
+  size: 40
   speed: 1
+  facets: 32
   direction:
     x: 1
     y: 0
@@ -153,26 +164,8 @@ class Asteroid
     x: 100
     y: 40
   draw: ->
-    #context.drawImage game.images['asteroid.png'], @position.x, @position.y
     if 0 < @position.x < canvas.width and 0 < @position.y < canvas.height
-      context.drawImage Asteroid.image, @position.x, @position.y
-  xdraw: ->
-    context.beginPath()
-    context.fillStyle = '#ccc'
-    context.moveTo @position.x-10, @position.y-10
-    context.lineTo @position.x-5, @position.y-5
-    context.lineTo @position.x, @position.y-10
-    context.lineTo @position.x+5, @position.y-10
-    context.lineTo @position.x+10, @position.y-5
-    context.lineTo @position.x+5, @position.y+5
-    context.lineTo @position.x+10, @position.y+10
-    context.lineTo @position.x+5, @position.y+10
-    context.lineTo @position.x, @position.y+5
-    context.lineTo @position.x-5, @position.y+10
-    context.lineTo @position.x-10, @position.y
-    context.lineTo @position.x-5, @position.y-5
-    context.lineTo @position.x-10, @position.y-10
-    context.fill()
+      context.drawImage @image, @position.x, @position.y
 
 createAsteroidStore = ->
   asteroids = []
