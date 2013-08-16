@@ -33,16 +33,19 @@ describe 'Collisions', ->
           y: vessel.position.y + 20
       engine.updateCollisions vessel, asteroids
       expect(engine.collisions.length).toBe 0
-    it 'should have any items closer than 20', ->
+    it 'should have any items closer than 30', ->
       asteroids.push
+        size: 40
         position:
-          x: vessel.position.x + 20
+          x: vessel.position.x + 30
           y: vessel.position.y
       asteroids.push
+        size: 40
         position:
           x: vessel.position.x
           y: vessel.position.y + 10
       asteroids.push
+        size: 40
         position:
           x: vessel.position.x + 10
           y: vessel.position.y + 10
@@ -50,14 +53,17 @@ describe 'Collisions', ->
       expect(engine.collisions.length).toBe 2
     it 'should have a reference to the correct items', ->
       asteroids.push
+        size: 40
         position:
-          x: vessel.position.x + 20
+          x: vessel.position.x + 30
           y: vessel.position.y
       asteroids.push
+        size: 40
         position:
           x: vessel.position.x + 10
           y: vessel.position.y + 10
       asteroids.push
+        size: 40
         position:
           x: vessel.position.x
           y: vessel.position.y + 20
@@ -66,6 +72,7 @@ describe 'Collisions', ->
       expect(engine.collisions[0].target).toBe asteroids[1]
   it 'should be known be the collided', ->
     asteroids.push asteroid =
+      size: 40
       position:
         x: vessel.position.x + 10
         y: vessel.position.y + 10

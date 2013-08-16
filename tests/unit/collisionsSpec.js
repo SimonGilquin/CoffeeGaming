@@ -44,20 +44,23 @@
         engine.updateCollisions(vessel, asteroids);
         return expect(engine.collisions.length).toBe(0);
       });
-      it('should have any items closer than 20', function() {
+      it('should have any items closer than 30', function() {
         asteroids.push({
+          size: 40,
           position: {
-            x: vessel.position.x + 20,
+            x: vessel.position.x + 30,
             y: vessel.position.y
           }
         });
         asteroids.push({
+          size: 40,
           position: {
             x: vessel.position.x,
             y: vessel.position.y + 10
           }
         });
         asteroids.push({
+          size: 40,
           position: {
             x: vessel.position.x + 10,
             y: vessel.position.y + 10
@@ -68,18 +71,21 @@
       });
       return it('should have a reference to the correct items', function() {
         asteroids.push({
+          size: 40,
           position: {
-            x: vessel.position.x + 20,
+            x: vessel.position.x + 30,
             y: vessel.position.y
           }
         });
         asteroids.push({
+          size: 40,
           position: {
             x: vessel.position.x + 10,
             y: vessel.position.y + 10
           }
         });
         asteroids.push({
+          size: 40,
           position: {
             x: vessel.position.x,
             y: vessel.position.y + 20
@@ -93,6 +99,7 @@
     it('should be known be the collided', function() {
       var asteroid;
       asteroids.push(asteroid = {
+        size: 40,
         position: {
           x: vessel.position.x + 10,
           y: vessel.position.y + 10
