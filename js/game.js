@@ -495,50 +495,47 @@
       start: Date.now(),
       frames: 0,
       add: function() {
-        var countersElement, drawTime, drawTimeValue, fps, fpsValue, oldDraw, oldUpdate, updateTime, updateTimeValue,
+        var collisions, countersElement, createCounter, drawTime, fps, oldDraw, oldUpdate, updateTime,
           _this = this;
         countersElement = document.createElement('div');
         countersElement.setAttribute('class', 'counters');
-        fps = document.createElement('p');
-        fps.innerHTML = 'FPS: ';
-        fpsValue = document.createElement('span');
-        fpsValue.setAttribute('class', 'fps');
-        fps.appendChild(fpsValue);
-        countersElement.appendChild(fps);
-        updateTime = document.createElement('p');
-        updateTime.innerHTML = 'Update: ';
-        updateTimeValue = document.createElement('span');
-        updateTimeValue.setAttribute('class', 'time');
-        updateTime.appendChild(updateTimeValue);
-        countersElement.appendChild(updateTime);
-        drawTime = document.createElement('p');
-        drawTime.innerHTML = 'Draw: ';
-        drawTimeValue = document.createElement('span');
-        drawTimeValue.setAttribute('class', 'time');
-        drawTime.appendChild(drawTimeValue);
-        countersElement.appendChild(drawTime);
+        createCounter = function(title) {
+          var counter, counterValue;
+          counter = document.createElement('p');
+          counter.innerHTML = title + ': ';
+          counterValue = document.createElement('span');
+          counterValue.setAttribute('class', title.replace(' ', '-').toLowerCase());
+          counter.appendChild(counterValue);
+          countersElement.appendChild(counter);
+          return counterValue;
+        };
+        fps = createCounter('FPS');
+        updateTime = createCounter('Update');
+        drawTime = createCounter('Draw');
+        collisions = createCounter('Collisions');
         document.body.appendChild(countersElement);
-        fpsValue.lastUpdate = performance.now();
-        fpsValue.lastFrameCount = 0;
+        fps.lastUpdate = performance.now();
+        fps.lastFrameCount = 0;
         oldUpdate = game.engine.update;
         oldDraw = game.engine.draw;
         game.engine.update = function() {
           var updateStart;
           updateStart = performance.now();
           oldUpdate();
-          return updateTimeValue.innerHTML = Math.round(performance.now() - updateStart);
+          collisions.innerHTML = game.engine.collisions.length;
+          return updateTime.innerHTML = Math.round(performance.now() - updateStart);
         };
         return game.engine.draw = function() {
           var drawStart, endLoop;
           drawStart = performance.now();
           oldDraw();
           endLoop = performance.now();
-          drawTimeValue.innerHTML = Math.round(endLoop - drawStart);
+          drawTime.innerHTML = Math.round(endLoop - drawStart);
           _this.frames++;
-          if (endLoop - fpsValue.lastUpdate > 250) {
-            fpsValue.innerHTML = _this.fps = Math.round((_this.frames - fpsValue.lastFrameCount) * 1000 / (endLoop - fpsValue.lastUpdate));
-            fpsValue.lastUpdate = endLoop;
-            fpsValue.lastFrameCount = _this.frames;
+          if (endLoop - fps.lastUpdate > 250) {
+            fps.innerHTML = _this.fps = Math.round((_this.frames - fps.lastFrameCount) * 1000 / (endLoop - fps.lastUpdate));
+            fps.lastUpdate = endLoop;
+            fps.lastFrameCount = _this.frames;
           }
           return _this.lastUpdate = endLoop;
         };
@@ -707,21 +704,18 @@
     };
 
     Engine.prototype.updateCollisions = function(vessel, asteroids) {
-      var asteroid, collisions;
-      collisions = (function() {
-        var _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = asteroids.length; _i < _len; _i++) {
-          asteroid = asteroids[_i];
-          if (asteroid.position.x === asteroid.position.x && vessel.position.y === asteroid.position.y) {
-            _results.push(asteroid);
-          }
+      var asteroid, firstpass, _i, _len;
+      firstpass = [];
+      for (_i = 0, _len = asteroids.length; _i < _len; _i++) {
+        asteroid = asteroids[_i];
+        if (vessel.distanceFrom(asteroid) < 20) {
+          firstpass.push({
+            source: vessel,
+            target: asteroid
+          });
         }
-        return _results;
-      })();
-      if (collisions.length > 0) {
-        return game.engine.collisions.push('Vessel crashed into asteroid!');
       }
+      return this.collisions = firstpass;
     };
 
     Engine.prototype.updateVessel = function(vessel) {

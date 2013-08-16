@@ -249,44 +249,42 @@ class Engine
     add: ->
       countersElement = document.createElement 'div'
       countersElement.setAttribute 'class', 'counters'
-      fps = document.createElement 'p'
-      fps.innerHTML = 'FPS: '
-      fpsValue = document.createElement 'span'
-      fpsValue.setAttribute 'class', 'fps'
-      fps.appendChild fpsValue
-      countersElement.appendChild fps
-      updateTime = document.createElement 'p'
-      updateTime.innerHTML = 'Update: '
-      updateTimeValue = document.createElement 'span'
-      updateTimeValue.setAttribute 'class', 'time'
-      updateTime.appendChild updateTimeValue
-      countersElement.appendChild updateTime
-      drawTime = document.createElement 'p'
-      drawTime.innerHTML = 'Draw: '
-      drawTimeValue = document.createElement 'span'
-      drawTimeValue.setAttribute 'class', 'time'
-      drawTime.appendChild drawTimeValue
-      countersElement.appendChild drawTime
+
+      createCounter = (title) ->
+        counter = document.createElement 'p'
+        counter.innerHTML = title + ': '
+        counterValue = document.createElement 'span'
+        counterValue.setAttribute 'class', title.replace(' ', '-').toLowerCase()
+        counter.appendChild counterValue
+        countersElement.appendChild counter
+        counterValue
+
+      fps = createCounter('FPS')
+      updateTime = createCounter('Update')
+      drawTime = createCounter('Draw')
+      collisions = createCounter('Collisions')
+
       document.body.appendChild countersElement
 
-      fpsValue.lastUpdate = performance.now()
-      fpsValue.lastFrameCount = 0
+      fps.lastUpdate = performance.now()
+      fps.lastFrameCount = 0
       oldUpdate = game.engine.update
       oldDraw = game.engine.draw
       game.engine.update = =>
         updateStart = performance.now()
         oldUpdate()
-        updateTimeValue.innerHTML = Math.round performance.now() - updateStart
+        collisions.innerHTML = game.engine.collisions.length
+        updateTime.innerHTML = Math.round performance.now() - updateStart
       game.engine.draw = =>
         drawStart = performance.now()
         oldDraw()
         endLoop = performance.now()
-        drawTimeValue.innerHTML = Math.round endLoop - drawStart
+        drawTime.innerHTML = Math.round endLoop - drawStart
         @frames++
-        if endLoop - fpsValue.lastUpdate > 250
-          fpsValue.innerHTML = @fps = Math.round((@frames - fpsValue.lastFrameCount) * 1000 / (endLoop - fpsValue.lastUpdate))
-          fpsValue.lastUpdate = endLoop
-          fpsValue.lastFrameCount = @frames
+        if endLoop - fps.lastUpdate > 250
+          fps.innerHTML = @fps = Math.round((@frames - fps.lastFrameCount) * 1000 / (endLoop - fps.lastUpdate))
+          fps.lastUpdate = endLoop
+          fps.lastFrameCount = @frames
         @lastUpdate = endLoop
   cursor:
     x: null
@@ -391,8 +389,13 @@ class Engine
       @updateVessel @vessel
 
   updateCollisions: (vessel, asteroids) ->
-    collisions = (asteroid for asteroid in asteroids when asteroid.position.x == asteroid.position.x and vessel.position.y == asteroid.position.y)
-    game.engine.collisions.push 'Vessel crashed into asteroid!' if collisions.length > 0
+    firstpass = []
+    for asteroid in asteroids when vessel.distanceFrom(asteroid) < 20
+      firstpass.push
+        source: vessel
+        target: asteroid
+    @collisions = firstpass
+  #game.engine.collisions.push 'Vessel crashed into asteroid!' if collisions.length > 0
 
   updateVessel: (vessel) ->
     vessel.position.x += vessel.vector.x
