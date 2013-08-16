@@ -53,6 +53,13 @@ describe 'Upon initialization', ->
     it 'maps up to thrust', ->
       pressKey 38
       expect(game.engine.events[0].action).toBe 'thrust'
+    it 'pauses / resumes the game on escape', ->
+      pressKey 27
+      game.engine.update()
+      expect(game.engine.isPaused()).toBeFalsy()
+      pressKey 27
+      game.engine.update()
+      expect(game.engine.isPaused()).toBeTruthy()
 
   describe 'the update loop', ->
     it 'consumes the events', ->

@@ -227,6 +227,7 @@ keymap =
   37: 'left'
   38: 'thrust'
   39: 'right'
+  27: 'escape'
 
 class Engine
   constructor: ->
@@ -379,8 +380,10 @@ class Engine
         when 'keyup'
           @keyboard[event.action] = false
       if @isPaused()
+        @play() if @keyboard.escape
         @handleButton @hud.pauseScreen.resumeButton, @play
       else
+        @pause() if @keyboard.escape
         @handleButton @hud.pauseButton, @pause
       delete @cursor.type if event.type == 'mouseup'
     unless @isPaused()

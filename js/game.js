@@ -462,7 +462,8 @@
   keymap = {
     37: 'left',
     38: 'thrust',
-    39: 'right'
+    39: 'right',
+    27: 'escape'
   };
 
   Engine = (function() {
@@ -686,8 +687,14 @@
             this.keyboard[event.action] = false;
         }
         if (this.isPaused()) {
+          if (this.keyboard.escape) {
+            this.play();
+          }
           this.handleButton(this.hud.pauseScreen.resumeButton, this.play);
         } else {
+          if (this.keyboard.escape) {
+            this.pause();
+          }
           this.handleButton(this.hud.pauseButton, this.pause);
         }
         if (event.type === 'mouseup') {

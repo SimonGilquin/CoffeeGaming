@@ -64,9 +64,17 @@
       beforeEach(function() {
         return game.engine.init();
       });
-      return it('maps up to thrust', function() {
+      it('maps up to thrust', function() {
         pressKey(38);
         return expect(game.engine.events[0].action).toBe('thrust');
+      });
+      return it('pauses / resumes the game on escape', function() {
+        pressKey(27);
+        game.engine.update();
+        expect(game.engine.isPaused()).toBeFalsy();
+        pressKey(27);
+        game.engine.update();
+        return expect(game.engine.isPaused()).toBeTruthy();
       });
     });
     return describe('the update loop', function() {
