@@ -210,11 +210,11 @@ class Vessel
     context.beginPath()
     context.fillStyle = '#f00'
     points = []
-    points.push x:5 , y:0
-    points.push x:-5, y:5
-    points.push x:-2, y:0
-    points.push x:-5, y:-5
-    points.push x:5 , y:0
+    points.push x:10 , y:0
+    points.push x:-10, y:10
+    points.push x:-5, y:0
+    points.push x:-10, y:-10
+    points.push x:10 , y:0
     for point in points
       t = translate @orientation, point.x, point.y
       point.x = t.x + @position.x
@@ -270,10 +270,11 @@ class Engine
       fps.lastFrameCount = 0
       oldUpdate = game.engine.update
       oldDraw = game.engine.draw
+      collisions.total = 0
       game.engine.update = =>
         updateStart = performance.now()
         oldUpdate()
-        collisions.innerHTML = game.engine.collisions.length
+        collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
         updateTime.innerHTML = Math.round performance.now() - updateStart
       game.engine.draw = =>
         drawStart = performance.now()

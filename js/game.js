@@ -421,23 +421,23 @@
       context.fillStyle = '#f00';
       points = [];
       points.push({
-        x: 5,
+        x: 10,
         y: 0
       });
       points.push({
-        x: -5,
-        y: 5
+        x: -10,
+        y: 10
       });
       points.push({
-        x: -2,
+        x: -5,
         y: 0
       });
       points.push({
-        x: -5,
-        y: -5
+        x: -10,
+        y: -10
       });
       points.push({
-        x: 5,
+        x: 10,
         y: 0
       });
       for (_i = 0, _len = points.length; _i < _len; _i++) {
@@ -518,11 +518,12 @@
         fps.lastFrameCount = 0;
         oldUpdate = game.engine.update;
         oldDraw = game.engine.draw;
+        collisions.total = 0;
         game.engine.update = function() {
           var updateStart;
           updateStart = performance.now();
           oldUpdate();
-          collisions.innerHTML = game.engine.collisions.length;
+          collisions.innerHTML = "" + game.engine.collisions.length + " (total: " + (collisions.total += game.engine.collisions.length) + ")";
           return updateTime.innerHTML = Math.round(performance.now() - updateStart);
         };
         return game.engine.draw = function() {
