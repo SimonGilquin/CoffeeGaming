@@ -47,8 +47,8 @@
   createSurface = function() {
     var surface;
     return surface = {
-      width: canvas.width,
-      height: canvas.height,
+      width: 4000,
+      height: 3000,
       context: context
     };
   };
@@ -347,9 +347,9 @@
     };
     asteroids.randomFill = function() {
       var i, j, orientation, pos, speed, vector, _i, _j;
-      for (i = _i = 0; _i < 20; i = ++_i) {
-        for (j = _j = 0; _j < 15; j = ++_j) {
-          if (!(!((i === 9 || i === 10) && j === 7))) {
+      for (i = _i = 0; _i < 16; i = ++_i) {
+        for (j = _j = 0; _j < 12; j = ++_j) {
+          if (!(!((i === 7 || i === 8) && (j === 5 || j === 6)))) {
             continue;
           }
           orientation = 2 * Math.random() * Math.PI;
@@ -359,8 +359,8 @@
             y: Math.sin(orientation) * speed
           };
           pos = {
-            x: (i + Math.random()) * canvas.width / 4 - 2 * canvas.width,
-            y: (j + Math.random()) * canvas.height / 3 - 2 * canvas.height
+            x: (i + Math.random()) * game.engine.surface.width / 16,
+            y: (j + Math.random()) * game.engine.surface.height / 12
           };
           asteroids.create(pos.x, pos.y, vector);
         }
@@ -467,8 +467,8 @@
       }
       this.keyboard = keyboard;
       this.viewport = {
-        x: 0,
-        y: 0,
+        x: this.surface.width / 2,
+        y: this.surface.height / 2,
         width: canvas.width,
         height: canvas.height,
         draw: function() {

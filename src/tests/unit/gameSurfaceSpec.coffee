@@ -6,7 +6,6 @@ describe 'The game surface', ->
     game.engine.init()
     surface = game.engine.surface
 
-  it 'should have the same size as the viewport', ->
-    expect(surface.width).toBe game.engine.viewport.width
-    expect(surface.height).toBe game.engine.viewport.height
-
+  it 'should be 4000 x 3000', ->
+    expect(surface.width).toBe 4000
+    expect(surface.height).toBe 3000

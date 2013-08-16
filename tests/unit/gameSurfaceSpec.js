@@ -8,9 +8,9 @@
       game.engine.init();
       return surface = game.engine.surface;
     });
-    return it('should have the same size as the viewport', function() {
-      expect(surface.width).toBe(game.engine.viewport.width);
-      return expect(surface.height).toBe(game.engine.viewport.height);
+    return it('should be 4000 x 3000', function() {
+      expect(surface.width).toBe(4000);
+      return expect(surface.height).toBe(3000);
     });
   });
 

@@ -19,8 +19,8 @@ enableLog(context) if debug
 
 createSurface = ->
   surface =
-      width: canvas.width
-      height: canvas.height
+      width: 4000
+      height: 3000
       context: context
 
 class Drawable
@@ -170,16 +170,16 @@ createAsteroidStore = ->
     asteroid
   asteroids.randomFill = ->
 
-    for i in [0...20]
-      for j in [0...15] when not ((i == 9 or i == 10) and j == 7)
+    for i in [0...16]
+      for j in [0...12] when not ((i == 7 or i == 8) and (j == 5 or j == 6))
         orientation = 2*Math.random()*Math.PI
         speed = Math.random() + 1
         vector =
           x: Math.cos(orientation) * speed
           y: Math.sin(orientation) * speed
         pos =
-          x: (i + Math.random()) * canvas.width / 4 - 2 * canvas.width
-          y: (j + Math.random()) * canvas.height / 3 - 2 * canvas.height
+          x: (i + Math.random()) * game.engine.surface.width / 16
+          y: (j + Math.random()) * game.engine.surface.height / 12
         asteroids.create pos.x, pos.y, vector
     asteroids
 
@@ -231,8 +231,8 @@ class Engine
       keyboard[key] = false
     @keyboard = keyboard
     @viewport =
-      x: 0
-      y: 0
+      x: @surface.width / 2
+      y: @surface.height / 2
       width: canvas.width
       height: canvas.height
       draw: ->

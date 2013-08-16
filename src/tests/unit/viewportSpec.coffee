@@ -17,9 +17,9 @@ describe 'The game viewport', ->
     expect(engine.viewport.width).toBe canvas.width
     expect(engine.viewport.height).toBe canvas.height
 
-  it 'is positioned on the game surface', ->
-    expect(viewport.x).toBe 0
-    expect(viewport.y).toBe 0
+  it 'is positioned on center of the game surface', ->
+    expect(viewport.x).toBe(engine.surface.width / 2)
+    expect(viewport.y).toBe(engine.surface.height / 2)
 
   it 'can be drawn', ->
     expect(viewport.draw).toBeDefined()
