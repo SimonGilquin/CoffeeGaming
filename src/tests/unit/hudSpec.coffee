@@ -1,11 +1,15 @@
 describe 'The HUD', ->
   hud = null
   engine = null
+  inResume = null
   beforeEach ->
     game.load()
     game.engine.init()
     engine = game.engine
     hud = engine.hud
+    inResume =
+      x: hud.pauseScreen.resumeButton.x + 10
+      y: hud.pauseScreen.resumeButton.y + 10
   it 'can be drawn', ->
     expect(typeof hud.draw).toBe 'function'
   it 'has a pause screen', ->
@@ -14,8 +18,8 @@ describe 'The HUD', ->
     beforeEach ->
       engine.pause()
     it 'clicking on the resume button resumes the game', ->
-      mouseDownAt 430, 330
-      mouseUpAt 430, 330
+      mouseDownAt inResume.x, inResume.y
+      mouseUpAt inResume.x, inResume.y
       engine.update()
       expect(engine.isPaused()).toBeFalsy()
 
@@ -35,24 +39,24 @@ describe 'The HUD', ->
           contextMock = createMockFor CanvasRenderingContext2D
         it 'should have the correct elements', ->
           hud.draw()
-          expect(contextMock.fillText).toHaveBeenCalledWith('Game paused', 500.5, 280)
-          expect(contextMock.fillText).toHaveBeenCalledWith('Resume...', 500, 340)
+          expect(contextMock.fillText).toHaveBeenCalledWith('Game paused', canvas.width / 2, 280)
+          expect(contextMock.fillText).toHaveBeenCalledWith('Resume...', canvas.width / 2, 340)
 
     describe 'when the mouse is over the resume button', ->
       it 'should be hovered', ->
-        moveMouseTo 430, 330
+        moveMouseTo inResume.x, inResume.y
         engine.update()
-        expect(hud.pauseScreen.resumeButton.isInElement 430, 330).toBeTruthy()
+        expect(hud.pauseScreen.resumeButton.isInElement inResume.x, inResume.y + 10).toBeTruthy()
         expect(hud.pauseScreen.resumeButton.state).toBe 'hover'
       it 'when clicking it is active', ->
-        mouseDownAt 430, 330
+        mouseDownAt inResume.x, inResume.y
         engine.update()
         expect(hud.pauseScreen.resumeButton.state).toBe 'active'
       it 'is not active after leaving', ->
-        moveMouseTo 430, 330
-        moveMouseTo 230, 130
+        moveMouseTo inResume.x, inResume.y
+        moveMouseTo 10,10
         engine.update()
-        expect(hud.pauseScreen.resumeButton.isInElement 230, 130).toBeFalsy()
+        expect(hud.pauseScreen.resumeButton.isInElement 10,10).toBeFalsy()
         expect(hud.pauseScreen.resumeButton.state).not.toBe 'hover'
 
   describe 'when the game is running', ->

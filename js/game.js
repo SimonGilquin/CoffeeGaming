@@ -32,9 +32,9 @@
 
   canvas = document.createElement('canvas');
 
-  canvas.width = 1001;
+  canvas.width = window.innerWidth;
 
-  canvas.height = 601;
+  canvas.height = window.innerHeight;
 
   document.body.appendChild(canvas);
 
@@ -220,7 +220,7 @@
       this.h = h;
       this.background = background;
       this.text = new Text('Game paused', 'black', 48, canvas.width / 2, 280);
-      this.resumeButton = new Button(420, 320, 160, 40).withText('Resume...', '#fff', 28);
+      this.resumeButton = new Button(canvas.width / 2 - 80, 320, 160, 40).withText('Resume...', '#fff', 28);
     }
 
     Screen.prototype.drawElement = function(x, y) {
@@ -483,6 +483,10 @@
         keyboard[key] = false;
       }
       this.keyboard = keyboard;
+      this.viewport = {
+        width: canvas.width,
+        height: canvas.height
+      };
     }
 
     Engine.prototype.running = null;

@@ -29,6 +29,6 @@ describe 'The game surface', ->
       spyOn game.engine.hud, 'draw'
       surface.draw()
     it 'should clear the screen', ->
-      expect(contextMock.clearRect).toHaveBeenCalledWith 0, 0, 1001, 601
+      expect(contextMock.clearRect).toHaveBeenCalledWith 0, 0, canvas.width, canvas.height
     it 'should draw the HUD', ->
       expect(game.engine.hud.draw).toHaveBeenCalled()

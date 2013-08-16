@@ -11,8 +11,8 @@ enableLog = (object) ->
   true
 
 canvas = document.createElement 'canvas'
-canvas.width = 1001
-canvas.height = 601
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
 document.body.appendChild canvas
 context = canvas.getContext '2d'
 enableLog(context) if debug
@@ -90,7 +90,7 @@ class Screen extends Drawable
   visible: false
   constructor: (@x, @y, @w, @h, @background) ->
     @text = new Text 'Game paused', 'black', 48, canvas.width/2, 280
-    @resumeButton = new Button(420, 320, 160, 40).withText('Resume...', '#fff', 28)
+    @resumeButton = new Button(canvas.width / 2 - 80, 320, 160, 40).withText('Resume...', '#fff', 28)
   drawElement: (x, y) ->
     if @background?
       context.fillStyle = @background
@@ -238,6 +238,9 @@ class Engine
     for code, key of keymap
       keyboard[key] = false
     @keyboard = keyboard
+    @viewport =
+      width: canvas.width
+      height: canvas.height
 
   running: null
   counters:

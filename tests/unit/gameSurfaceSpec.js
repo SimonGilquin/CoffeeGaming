@@ -32,7 +32,7 @@
         return surface.draw();
       });
       it('should clear the screen', function() {
-        return expect(contextMock.clearRect).toHaveBeenCalledWith(0, 0, 1001, 601);
+        return expect(contextMock.clearRect).toHaveBeenCalledWith(0, 0, canvas.width, canvas.height);
       });
       return it('should draw the HUD', function() {
         return expect(game.engine.hud.draw).toHaveBeenCalled();
