@@ -7,12 +7,12 @@ describe 'The vessel', ->
     game.load()
     window.Image.loadAll()
     engine = game.engine
+    engine.play()
   afterEach ->
     window.Image = oldImage
 
   it 'when playing updates on game ticks', ->
     spyOn engine, 'updateVessel'
-    engine.play()
     engine.update()
     expect(engine.updateVessel).toHaveBeenCalled()
 
@@ -34,6 +34,10 @@ describe 'The vessel', ->
     expect(vessel.vector).toBeEqualTo
       x: 0
       y: 0
+
+  it 'does NOT collide any asteroids', ->
+    engine.update()
+    expect(engine.collisions.length).toBe 0
 
   it 'is in the center of the screen', ->
     vessel = engine.createVessel()
@@ -86,7 +90,6 @@ describe 'The vessel', ->
       engine.keyboard.left = true
       engine.keyboard.thrust = true
     it 'turns the vessel', ->
-      oldVector = vessel.vector
       engine.updateVessel vessel
       expect(vessel.vector).toBeEqualTo
         x: .1
@@ -108,3 +111,46 @@ describe 'The vessel', ->
       engine.keyboard.thrust = false
       engine.update()
       expect(engine.vessel.speed).toBe oldSpeed
+
+  describe 'can tell its distance from an object', ->
+    vessel = null
+    beforeEach ->
+      vessel = engine.createVessel()
+
+    it 'as 0 when they are superposed', ->
+      object =
+        position: vessel.position
+      expect(vessel.distanceFrom object).toBe 0
+
+    it 'as 1 when object is at (+1, 0)', ->
+      object =
+        position:
+          x: vessel.position.x + 1
+          y: vessel.position.y
+      expect(vessel.distanceFrom object).toBe 1
+
+    it 'as 3 when object is at (0, -3)', ->
+      object =
+        position:
+          x: vessel.position.x
+          y: vessel.position.y - 3
+      expect(vessel.distanceFrom object).toBe 3
+
+    it 'as 5 when object is at (-3, +4)', ->
+      object =
+        position:
+          x: vessel.position.x - 3
+          y: vessel.position.y + 4
+      expect(vessel.distanceFrom object).toBe 5
+
+  describe 'collides', ->
+    beforeEach ->
+      engine.play()
+    it 'when it hits an asteroid', ->
+      vessel = engine.createVessel()
+      asteroid = engine.asteroids.create(vessel.position.x, vessel.position.y)
+
+      engine.update()
+
+      expect(engine.collisions.length).toBe 1
+

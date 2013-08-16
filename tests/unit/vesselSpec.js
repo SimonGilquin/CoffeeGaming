@@ -9,14 +9,14 @@
       window.Image = ImageHelper;
       game.load();
       window.Image.loadAll();
-      return engine = game.engine;
+      engine = game.engine;
+      return engine.play();
     });
     afterEach(function() {
       return window.Image = oldImage;
     });
     it('when playing updates on game ticks', function() {
       spyOn(engine, 'updateVessel');
-      engine.play();
       engine.update();
       return expect(engine.updateVessel).toHaveBeenCalled();
     });
@@ -41,6 +41,10 @@
         x: 0,
         y: 0
       });
+    });
+    it('does NOT collide any asteroids', function() {
+      engine.update();
+      return expect(engine.collisions.length).toBe(0);
     });
     it('is in the center of the screen', function() {
       var vessel;
@@ -106,8 +110,6 @@
         return engine.keyboard.thrust = true;
       });
       it('turns the vessel', function() {
-        var oldVector;
-        oldVector = vessel.vector;
         engine.updateVessel(vessel);
         expect(vessel.vector).toBeEqualTo({
           x: .1,
@@ -119,7 +121,7 @@
         return engine.keyboard.left = false;
       });
     });
-    return describe('releasing the thrust', function() {
+    describe('releasing the thrust', function() {
       var vessel;
       vessel = null;
       beforeEach(function() {
@@ -137,6 +139,62 @@
         engine.keyboard.thrust = false;
         engine.update();
         return expect(engine.vessel.speed).toBe(oldSpeed);
+      });
+    });
+    describe('can tell its distance from an object', function() {
+      var vessel;
+      vessel = null;
+      beforeEach(function() {
+        return vessel = engine.createVessel();
+      });
+      it('as 0 when they are superposed', function() {
+        var object;
+        object = {
+          position: vessel.position
+        };
+        return expect(vessel.distanceFrom(object)).toBe(0);
+      });
+      it('as 1 when object is at (+1, 0)', function() {
+        var object;
+        object = {
+          position: {
+            x: vessel.position.x + 1,
+            y: vessel.position.y
+          }
+        };
+        return expect(vessel.distanceFrom(object)).toBe(1);
+      });
+      it('as 3 when object is at (0, -3)', function() {
+        var object;
+        object = {
+          position: {
+            x: vessel.position.x,
+            y: vessel.position.y - 3
+          }
+        };
+        return expect(vessel.distanceFrom(object)).toBe(3);
+      });
+      return it('as 5 when object is at (-3, +4)', function() {
+        var object;
+        object = {
+          position: {
+            x: vessel.position.x - 3,
+            y: vessel.position.y + 4
+          }
+        };
+        return expect(vessel.distanceFrom(object)).toBe(5);
+      });
+    });
+    return describe('collides', function() {
+      beforeEach(function() {
+        return engine.play();
+      });
+      return it('when it hits an asteroid', function() {
+        var asteroid, vessel;
+        vessel = engine.createVessel();
+        asteroid = engine.asteroids.create(vessel.position.x, vessel.position.y);
+        engine.update();
+        return expect(engine.collisions.length).toBe(1);
       });
     });
   });

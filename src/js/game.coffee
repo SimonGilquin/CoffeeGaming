@@ -223,6 +223,9 @@ class Vessel
     context.lineTo(point.x, point.y) for point in points[1..]
     context.fill()
 
+  distanceFrom : (object) ->
+    Math.sqrt(Math.pow(object.position.x - @position.x, 2) + Math.pow(object.position.y - @position.y, 2))
+
 keymap =
   37: 'left'
   38: 'thrust'
@@ -237,6 +240,7 @@ class Engine
     for code, key of keymap
       keyboard[key] = false
     @keyboard = keyboard
+    @collisions = []
 
   running: null
   counters:
@@ -293,11 +297,9 @@ class Engine
   mainLoop: =>
     @update()
     @draw()
-    #@counters.update?()
   draw: => @surface.draw()
   init: ->
     @counters.add() if performance?.now?
-    #setInterval @mainLoop, 1000/60
     animFrame = window.requestAnimationFrame
     window.webkitRequestAnimationFrame unless animFrame?
     window.mozRequestAnimationFrame unless animFrame?
@@ -384,8 +386,13 @@ class Engine
         @handleButton @hud.pauseButton, @pause
       delete @cursor.type if event.type == 'mouseup'
     unless @isPaused()
+      @updateCollisions @vessel, @asteroids
       @updateAsteroids()
       @updateVessel @vessel
+
+  updateCollisions: (vessel, asteroids) ->
+    collisions = (asteroid for asteroid in asteroids when asteroid.position.x == asteroid.position.x and vessel.position.y == asteroid.position.y)
+    game.engine.collisions.push 'Vessel crashed into asteroid!' if collisions.length > 0
 
   updateVessel: (vessel) ->
     vessel.position.x += vessel.vector.x

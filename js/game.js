@@ -455,6 +455,10 @@
       return context.fill();
     };
 
+    Vessel.prototype.distanceFrom = function(object) {
+      return Math.sqrt(Math.pow(object.position.x - this.position.x, 2) + Math.pow(object.position.y - this.position.y, 2));
+    };
+
     return Vessel;
 
   })();
@@ -482,6 +486,7 @@
         keyboard[key] = false;
       }
       this.keyboard = keyboard;
+      this.collisions = [];
     }
 
     Engine.prototype.running = null;
@@ -695,8 +700,27 @@
         }
       }
       if (!this.isPaused()) {
+        this.updateCollisions(this.vessel, this.asteroids);
         this.updateAsteroids();
         return this.updateVessel(this.vessel);
+      }
+    };
+
+    Engine.prototype.updateCollisions = function(vessel, asteroids) {
+      var asteroid, collisions;
+      collisions = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = asteroids.length; _i < _len; _i++) {
+          asteroid = asteroids[_i];
+          if (asteroid.position.x === asteroid.position.x && vessel.position.y === asteroid.position.y) {
+            _results.push(asteroid);
+          }
+        }
+        return _results;
+      })();
+      if (collisions.length > 0) {
+        return game.engine.collisions.push('Vessel crashed into asteroid!');
       }
     };
 

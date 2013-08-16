@@ -43,6 +43,3 @@ describe 'Asteroids', ->
       engine.updateAsteroids()
       expect(asteroid.position.x).toBe 101
       expect(asteroid.position.y).toBe 40
-    xit 'creates an asteroid when there is none', ->
-      engine.updateAsteroids()
-      expect(engine.asteroids.length).toBe 1
