@@ -60,6 +60,32 @@ describe 'The vessel', ->
     vessel = engine.createVessel()
     expect(vessel.rotationalSpeed).toBe 0.1
 
+  describe 'when exiting the game surface', ->
+    it 'by the right side is moved to the left', ->
+      vessel = engine.createVessel(engine.surface.width + 1, 100)
+      engine.updateVessel vessel
+      expect(vessel.position).toBeEqualTo
+        x: 0
+        y: 100
+    it 'by the bottom side is moved to the top', ->
+      vessel = engine.createVessel(100, engine.surface.height + 1)
+      engine.updateVessel vessel
+      expect(vessel.position).toBeEqualTo
+        x: 100
+        y: 0
+    it 'by the left side is moved to the right', ->
+      vessel = engine.createVessel(-1, 100)
+      engine.updateVessel vessel
+      expect(vessel.position).toBeEqualTo
+        x: engine.surface.width
+        y: 100
+    it 'by the top side is moved to the bottom', ->
+      vessel = engine.createVessel(100, -1)
+      engine.updateVessel vessel
+      expect(vessel.position).toBeEqualTo
+        x: 100
+        y: engine.surface.height
+
   describe 'pressing the thrust key', ->
     beforeEach ->
       engine.play()

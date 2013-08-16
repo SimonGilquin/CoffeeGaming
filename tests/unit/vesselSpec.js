@@ -71,6 +71,44 @@
       vessel = engine.createVessel();
       return expect(vessel.rotationalSpeed).toBe(0.1);
     });
+    describe('when exiting the game surface', function() {
+      it('by the right side is moved to the left', function() {
+        var vessel;
+        vessel = engine.createVessel(engine.surface.width + 1, 100);
+        engine.updateVessel(vessel);
+        return expect(vessel.position).toBeEqualTo({
+          x: 0,
+          y: 100
+        });
+      });
+      it('by the bottom side is moved to the top', function() {
+        var vessel;
+        vessel = engine.createVessel(100, engine.surface.height + 1);
+        engine.updateVessel(vessel);
+        return expect(vessel.position).toBeEqualTo({
+          x: 100,
+          y: 0
+        });
+      });
+      it('by the left side is moved to the right', function() {
+        var vessel;
+        vessel = engine.createVessel(-1, 100);
+        engine.updateVessel(vessel);
+        return expect(vessel.position).toBeEqualTo({
+          x: engine.surface.width,
+          y: 100
+        });
+      });
+      return it('by the top side is moved to the bottom', function() {
+        var vessel;
+        vessel = engine.createVessel(100, -1);
+        engine.updateVessel(vessel);
+        return expect(vessel.position).toBeEqualTo({
+          x: 100,
+          y: engine.surface.height
+        });
+      });
+    });
     describe('pressing the thrust key', function() {
       beforeEach(function() {
         engine.play();

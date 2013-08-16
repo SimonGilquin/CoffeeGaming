@@ -44,34 +44,12 @@
     enableLog(context);
   }
 
-  createSurface = function(width, height) {
+  createSurface = function() {
     var surface;
     return surface = {
-      width: width,
-      height: height,
-      drawLine: function(x1, y1, x2, y2, width) {
-        if (width == null) {
-          width = 1;
-        }
-        context.beginPath();
-        context.lineWidth = width;
-        context.moveTo(x1 + width / 2, y1 + width / 2);
-        context.lineTo(x2 + width / 2, y2 + width / 2);
-        return context.stroke();
-      },
-      context: context,
-      scale: 1,
-      draw: function() {
-        var asteroid, _i, _len, _ref;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        _ref = game.engine.asteroids;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          asteroid = _ref[_i];
-          asteroid.draw();
-        }
-        game.engine.vessel.draw();
-        return game.engine.hud.draw();
-      }
+      width: canvas.width,
+      height: canvas.height,
+      context: context
     };
   };
 
@@ -263,24 +241,20 @@
   })(Screen);
 
   Asteroid = (function() {
-    function Asteroid(posX, posY, vectorX, vectorY, speed) {
+    function Asteroid(posX, posY, vector) {
       if (posX == null) {
         posX = 100;
       }
       if (posY == null) {
         posY = 40;
       }
-      if (vectorX == null) {
-        vectorX = 1;
+      this.vector = vector;
+      if (this.vector == null) {
+        this.vector = {
+          x: 0,
+          y: 0
+        };
       }
-      if (vectorY == null) {
-        vectorY = 0;
-      }
-      this.speed = speed != null ? speed : 1;
-      this.direction = {
-        x: vectorX,
-        y: vectorY
-      };
       this.position = {
         x: posX,
         y: posY
@@ -316,8 +290,6 @@
       image.src = url;
       return image;
     })();
-
-    Asteroid.prototype.speed = 1;
 
     Asteroid.prototype.direction = {
       x: 1,
@@ -374,18 +346,23 @@
       return asteroid;
     };
     asteroids.randomFill = function() {
-      var i, j, pos, vector, _i, _j;
+      var i, j, orientation, pos, speed, vector, _i, _j;
       for (i = _i = 0; _i < 20; i = ++_i) {
         for (j = _j = 0; _j < 15; j = ++_j) {
           if (!(!((i === 9 || i === 10) && j === 7))) {
             continue;
           }
-          vector = 2 * Math.random() * Math.PI;
+          orientation = 2 * Math.random() * Math.PI;
+          speed = Math.random() + 1;
+          vector = {
+            x: Math.cos(orientation) * speed,
+            y: Math.sin(orientation) * speed
+          };
           pos = {
             x: (i + Math.random()) * canvas.width / 4 - 2 * canvas.width,
             y: (j + Math.random()) * canvas.height / 3 - 2 * canvas.height
           };
-          asteroids.create(pos.x, pos.y, Math.cos(vector), Math.sin(vector), Math.random() + 1);
+          asteroids.create(pos.x, pos.y, vector);
         }
       }
       return asteroids;
@@ -401,11 +378,17 @@
   };
 
   Vessel = (function() {
-    function Vessel() {
+    function Vessel(x, y) {
+      if (x == null) {
+        x = canvas.width / 2;
+      }
+      if (y == null) {
+        y = canvas.height / 2;
+      }
       this.acceleration = .1;
       this.position = {
-        x: canvas.width / 2,
-        y: canvas.height / 2
+        x: x,
+        y: y
       };
       this.rotationalSpeed = .1;
       this.orientation = 0;
@@ -484,8 +467,21 @@
       }
       this.keyboard = keyboard;
       this.viewport = {
+        x: 0,
+        y: 0,
         width: canvas.width,
-        height: canvas.height
+        height: canvas.height,
+        draw: function() {
+          var asteroid, _i, _len, _ref;
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          _ref = game.engine.asteroids;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            asteroid = _ref[_i];
+            asteroid.draw();
+          }
+          game.engine.vessel.draw();
+          return game.engine.hud.draw();
+        }
       };
     }
 
@@ -551,10 +547,16 @@
     };
 
     Engine.prototype.createVessel = function() {
-      return new Vessel();
+      var args;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return (function(func, args, ctor) {
+        ctor.prototype = func.prototype;
+        var child = new ctor, result = func.apply(child, args);
+        return Object(result) === result ? result : child;
+      })(Vessel, args, function(){});
     };
 
-    Engine.prototype.surface = createSurface(800, 600);
+    Engine.prototype.surface = createSurface();
 
     Engine.prototype.mainLoop = function() {
       this.update();
@@ -562,7 +564,7 @@
     };
 
     Engine.prototype.draw = function() {
-      return this.surface.draw();
+      return this.viewport.draw();
     };
 
     Engine.prototype.init = function() {
@@ -713,7 +715,19 @@
 
     Engine.prototype.updateVessel = function(vessel) {
       vessel.position.x += vessel.vector.x;
+      if (vessel.position.x > game.engine.surface.width) {
+        vessel.position.x = 0;
+      }
+      if (vessel.position.x < 0) {
+        vessel.position.x = game.engine.surface.width;
+      }
       vessel.position.y += vessel.vector.y;
+      if (vessel.position.y > game.engine.surface.height) {
+        vessel.position.y = 0;
+      }
+      if (vessel.position.y < 0) {
+        vessel.position.y = game.engine.surface.height;
+      }
       vessel.thrust = this.keyboard['thrust'];
       if (vessel.thrust) {
         vessel.vector.x += Math.cos(vessel.orientation) * vessel.acceleration;
@@ -734,8 +748,22 @@
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         asteroid = _ref[_i];
-        asteroid.position.x += asteroid.direction.x * asteroid.speed;
-        _results.push(asteroid.position.y += asteroid.direction.y * asteroid.speed);
+        asteroid.position.x += asteroid.vector.x;
+        if (asteroid.position.x > game.engine.surface.width) {
+          asteroid.position.x = 0;
+        }
+        if (asteroid.position.x < 0) {
+          asteroid.position.x = game.engine.surface.width;
+        }
+        asteroid.position.y += asteroid.vector.y;
+        if (asteroid.position.y > game.engine.surface.height) {
+          asteroid.position.y = 0;
+        }
+        if (asteroid.position.y < 0) {
+          _results.push(asteroid.position.y = game.engine.surface.height);
+        } else {
+          _results.push(void 0);
+        }
       }
       return _results;
     };

@@ -8,17 +8,41 @@
   });
 
   describe('The game viewport', function() {
-    var engine;
+    var contextMock, engine, viewport;
     engine = null;
+    viewport = null;
+    contextMock = null;
     beforeEach(function() {
-      return engine = game.engine;
+      engine = game.engine;
+      viewport = engine.viewport;
+      return contextMock = createMockFor(CanvasRenderingContext2D);
     });
     it('exists', function() {
       return expect(engine.viewport).toBeDefined();
     });
-    return it('has the same size as the canvas', function() {
+    it('has the same size as the canvas', function() {
       expect(engine.viewport.width).toBe(canvas.width);
       return expect(engine.viewport.height).toBe(canvas.height);
+    });
+    it('is positioned on the game surface', function() {
+      expect(viewport.x).toBe(0);
+      return expect(viewport.y).toBe(0);
+    });
+    it('can be drawn', function() {
+      expect(viewport.draw).toBeDefined();
+      return expect(typeof viewport.draw).toBe('function');
+    });
+    return describe('when drawing', function() {
+      beforeEach(function() {
+        spyOn(game.engine.hud, 'draw');
+        return viewport.draw();
+      });
+      it('should clear the screen', function() {
+        return expect(contextMock.clearRect).toHaveBeenCalledWith(0, 0, canvas.width, canvas.height);
+      });
+      return it('should draw the HUD', function() {
+        return expect(game.engine.hud.draw).toHaveBeenCalled();
+      });
     });
   });
 
