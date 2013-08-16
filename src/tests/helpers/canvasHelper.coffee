@@ -8,6 +8,7 @@ class ImageHelper
   constructor: ->
     ImageHelper.items.push @
   @items: []
+  onload: ->
   @loadAll: ->
     item.onload() for item in ImageHelper.items
 window.ImageHelper = ImageHelper

@@ -21,6 +21,8 @@
 
     ImageHelper.items = [];
 
+    ImageHelper.prototype.onload = function() {};
+
     ImageHelper.loadAll = function() {
       var item, _i, _len, _ref, _results;
       _ref = ImageHelper.items;
