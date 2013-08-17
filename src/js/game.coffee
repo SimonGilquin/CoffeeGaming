@@ -1,3 +1,4 @@
+
 debug = true
 showconsole = false
 enableLog = (object, name) ->
@@ -126,6 +127,52 @@ class Hud extends Screen
     delete @background
 
 class Asteroid
+  @generate: (size, facets) ->
+    initialAngle = (Math.random() + 3) * Math.PI / facets
+    angle = initialAngle
+    points = []
+    until closed
+      if angle - initialAngle >= 2* Math.PI
+        points.push firstPoint
+        closed = true
+      else
+        distance = (Math.random() + 4) * size / 10
+        point =
+          x: Math.cos(angle) * distance
+          y: Math.sin(angle) * distance
+        if firstPoint?
+          points.push point
+        else
+          firstPoint = point
+          points.push point
+      angle += (Math.random() + 3) * Math.PI / facets
+    points
+  @createImage: (vertices, size) ->
+    tempCanvas = document.createElement 'canvas'
+    tempCanvas.width = size * 2
+    tempCanvas.height = size
+    tempContext = tempCanvas.getContext '2d'
+    tempContext.translate(size/2, size/2)
+    tempContext.beginPath()
+    tempContext.fillStyle = '#ccc'
+
+    tempContext.moveTo vertices[0].x, vertices[0].y
+    tempContext.lineTo vertex.x, vertex.y for vertex in vertices[1..]
+
+    tempContext.fill()
+    tempContext.translate(size, 0)
+    tempContext.beginPath()
+    tempContext.fillStyle = '#333'
+
+    tempContext.moveTo vertices[0].x, vertices[0].y
+    tempContext.lineTo vertex.x, vertex.y for vertex in vertices[1..]
+
+    tempContext.fill()
+    tempContext.getImageData(size * -.5, size * -.5, size, size)
+    url = tempCanvas.toDataURL()
+    image = new window.Image()
+    image.src = url
+    image
   constructor: (posX = 100, posY = 40, @vector) ->
     unless @vector?
       @vector =
@@ -134,39 +181,8 @@ class Asteroid
     @position =
       x: posX
       y: posY
-    @image = (=>
-      tempCanvas = document.createElement 'canvas'
-      tempCanvas.width = @size
-      tempCanvas.height = @size
-      tempContext = tempCanvas.getContext '2d'
-      tempContext.translate(@size/2, @size/2)
-      tempContext.beginPath()
-      tempContext.fillStyle = '#ccc'
-
-      initialAngle = (Math.random() + 3) * Math.PI / @facets
-      angle = initialAngle
-      until closed
-        if angle - initialAngle >= 2* Math.PI
-          context.lineTo firstPoint.x, firstPoint.y
-          closed = true
-        else
-          distance = (Math.random() + 4) * @size / 10
-          point =
-            x: Math.cos(angle) * distance
-            y: Math.sin(angle) * distance
-          if firstPoint?
-            tempContext.lineTo point.x, point.y
-          else
-            firstPoint = point
-            tempContext.moveTo point.x, point.y
-        angle += (Math.random() + 3) * Math.PI / @facets
-
-      tempContext.fill()
-      tempContext.getImageData(@size * -.5, @size * -.5, @size, @size)
-      url = tempCanvas.toDataURL()
-      image = new window.Image()
-      image.src = url
-      image)()
+    @vertices = Asteroid.generate @size, @facets
+    @image = Asteroid.createImage @vertices, @size
   size: 40
   speed: 1
   facets: 32
@@ -177,8 +193,10 @@ class Asteroid
     x: 100
     y: 40
   drawAt: (x, y)->
-  #  if 0 <= drawnAt.x + @size / 2 <= canvas.width + @size and 0 <= drawnAt.y + @size / 2 <= canvas.height + @size
-    context.drawImage @image, x, y
+    if @collides
+      context.drawImage @image, @size, 0, @size, @size, x, y, @size, @size
+    else
+      context.drawImage @image, 0, 0, @size, @size, x, y, @size, @size
 
 createAsteroidStore = ->
   asteroids = []
@@ -340,7 +358,7 @@ class Engine
 
       document.body.appendChild countersElement
 
-      fps.lastUpdate = timing()
+      lastUpdate = timing()
       fps.lastFrameCount = 0
       oldUpdate = game.engine.update
       oldDraw = game.engine.draw
@@ -348,21 +366,22 @@ class Engine
       game.engine.update = =>
         updateStart = timing()
         oldUpdate()
-        collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
-        updateTime.innerHTML = Math.round timing() - updateStart
-        camera.innerHTML = "#{Math.floor(game.engine.viewport.x)}, #{Math.floor(game.engine.viewport.y)}"
-        ship.innerHTML = "#{Math.floor(game.engine.vessel.position.x)}, #{Math.floor(game.engine.vessel.position.y)}, (#{game.engine.vessel.vector.x}, #{game.engine.vessel.vector.y})"
+        endUpdate = timing()
+        if endUpdate - lastUpdate > 250
+          collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
+          updateTime.innerHTML = Math.round endUpdate - updateStart
+          camera.innerHTML = "#{Math.floor(game.engine.viewport.x)}, #{Math.floor(game.engine.viewport.y)}"
+          ship.innerHTML = "#{Math.floor(game.engine.vessel.position.x)}, #{Math.floor(game.engine.vessel.position.y)}, (#{game.engine.vessel.vector.x}, #{game.engine.vessel.vector.y})"
       game.engine.draw = =>
         drawStart = timing()
         oldDraw()
         endLoop = timing()
         drawTime.innerHTML = Math.round endLoop - drawStart
         @frames++
-        if endLoop - fps.lastUpdate > 250
-          fps.innerHTML = @fps = Math.round((@frames - fps.lastFrameCount) * 1000 / (endLoop - fps.lastUpdate))
-          fps.lastUpdate = endLoop
+        if endLoop - lastUpdate > 250
+          fps.innerHTML = @fps = Math.round((@frames - fps.lastFrameCount) * 1000 / (endLoop - lastUpdate))
+          lastUpdate = endLoop
           fps.lastFrameCount = @frames
-        @lastUpdate = endLoop
   cursor:
     x: null
     y: null
@@ -472,12 +491,19 @@ class Engine
     for collision in @collisions
       collision.source.collides = false
       collision.target.collides = false
+    @collisions = []
 
     firstpass = []
-    for asteroid in asteroids when vessel.distanceFrom(asteroid) < (asteroid.size + vessel.size) / 2
-      firstpass.push
-        source: vessel
-        target: asteroid
+    for asteroid, id in asteroids
+      if vessel.distanceFrom(asteroid) < (asteroid.size + vessel.size) / 2
+        firstpass.push
+          source: vessel
+          target: asteroid
+      for secondAsteroid in asteroids[id+1..] when distanceBetween(asteroid.position, secondAsteroid.position) < (asteroid.size + secondAsteroid.size) / 2
+        firstpass.push
+          source: asteroid
+          target: secondAsteroid
+
     @collisions = firstpass
     for collision in @collisions
       collision.source.collides = true
@@ -540,8 +566,6 @@ window.game = game =
           @engine.init().pause()
           window.vessel = game.engine.vessel
           window.asteroids = game.engine.asteroids
-          vessel.position.x = 3900
-          vessel.position.y = 2900
 
     for url of @images
           counter++
