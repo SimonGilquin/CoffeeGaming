@@ -177,11 +177,8 @@ class Asteroid
     x: 100
     y: 40
   drawAt: (x, y)->
-    drawnAt =
-      x: @position.x - x - @size / 2
-      y: @position.y - y - @size / 2
-    if 0 <= drawnAt.x + @size / 2 <= canvas.width + @size and 0 <= drawnAt.y + @size / 2 <= canvas.height + @size
-      context.drawImage @image, drawnAt.x, drawnAt.y
+  #  if 0 <= drawnAt.x + @size / 2 <= canvas.width + @size and 0 <= drawnAt.y + @size / 2 <= canvas.height + @size
+    context.drawImage @image, x, y
 
 createAsteroidStore = ->
   asteroids = []
@@ -303,7 +300,15 @@ class Engine
         else
           context.drawImage background, @x, @y, @width, @height, 0, 0, @width, @height
 
-        asteroid.drawAt(@x, @y) for asteroid in game.engine.asteroids
+        for asteroid in game.engine.asteroids
+          drawnAt =
+            x: asteroid.position.x - @x - asteroid.size / 2
+            y: asteroid.position.y - @y - asteroid.size / 2
+          drawnAt.x -= surface.width if drawnAt.x > surface.width
+          drawnAt.y -= surface.height if drawnAt.y > surface.height
+          drawnAt.x += surface.width if drawnAt.x + surface.width < @width
+          drawnAt.y += surface.height if drawnAt.y + surface.height < @height
+          asteroid.drawAt(drawnAt.x, drawnAt.y) if -asteroid.size <= drawnAt.x <= @width and -asteroid.size <= drawnAt.y <= @height
         game.engine.vessel.drawAt @x, @y
         game.engine.hud.draw()
     )()
@@ -535,8 +540,8 @@ window.game = game =
           @engine.init().pause()
           window.vessel = game.engine.vessel
           window.asteroids = game.engine.asteroids
-          vessel.position.x = 100
-          vessel.position.y = 100
+          vessel.position.x = 3900
+          vessel.position.y = 2900
 
     for url of @images
           counter++

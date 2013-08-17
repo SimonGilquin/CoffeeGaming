@@ -351,14 +351,7 @@
     };
 
     Asteroid.prototype.drawAt = function(x, y) {
-      var drawnAt, _ref, _ref1;
-      drawnAt = {
-        x: this.position.x - x - this.size / 2,
-        y: this.position.y - y - this.size / 2
-      };
-      if ((0 <= (_ref = drawnAt.x + this.size / 2) && _ref <= canvas.width + this.size) && (0 <= (_ref1 = drawnAt.y + this.size / 2) && _ref1 <= canvas.height + this.size)) {
-        return context.drawImage(this.image, drawnAt.x, drawnAt.y);
-      }
+      return context.drawImage(this.image, x, y);
     };
 
     return Asteroid;
@@ -518,7 +511,7 @@
           width: width,
           height: height,
           draw: function() {
-            var asteroid, xOffset, yOffset, _i, _len, _ref;
+            var asteroid, drawnAt, xOffset, yOffset, _i, _len, _ref, _ref1, _ref2;
             context.clearRect(0, 0, canvas.width, canvas.height);
             this.x = game.engine.vessel.position.x - canvas.width / 2;
             this.y = game.engine.vessel.position.y - canvas.height / 2;
@@ -549,7 +542,25 @@
             _ref = game.engine.asteroids;
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               asteroid = _ref[_i];
-              asteroid.drawAt(this.x, this.y);
+              drawnAt = {
+                x: asteroid.position.x - this.x - asteroid.size / 2,
+                y: asteroid.position.y - this.y - asteroid.size / 2
+              };
+              if (drawnAt.x > surface.width) {
+                drawnAt.x -= surface.width;
+              }
+              if (drawnAt.y > surface.height) {
+                drawnAt.y -= surface.height;
+              }
+              if (drawnAt.x + surface.width < this.width) {
+                drawnAt.x += surface.width;
+              }
+              if (drawnAt.y + surface.height < this.height) {
+                drawnAt.y += surface.height;
+              }
+              if ((-asteroid.size <= (_ref1 = drawnAt.x) && _ref1 <= this.width) && (-asteroid.size <= (_ref2 = drawnAt.y) && _ref2 <= this.height)) {
+                asteroid.drawAt(drawnAt.x, drawnAt.y);
+              }
             }
             game.engine.vessel.drawAt(this.x, this.y);
             return game.engine.hud.draw();
@@ -925,8 +936,8 @@
             _this.engine.init().pause();
             window.vessel = game.engine.vessel;
             window.asteroids = game.engine.asteroids;
-            vessel.position.x = 100;
-            return vessel.position.y = 100;
+            vessel.position.x = 3900;
+            return vessel.position.y = 2900;
           }
         };
       };
