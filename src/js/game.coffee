@@ -289,7 +289,12 @@ class Engine
         else if @y < 0
           yOffset = -@y
 
-        if xOffset?
+        if xOffset? and yOffset?
+          context.drawImage background, background.width - xOffset, background.height - yOffset, xOffset, yOffset, 0, 0, xOffset, yOffset  #topleft
+          context.drawImage background, 0, background.height - yOffset, @width - xOffset, yOffset, xOffset, 0, @width - xOffset, yOffset #topright
+          context.drawImage background, background.width - xOffset, 0, xOffset, @height - yOffset, 0, yOffset, xOffset, @height - yOffset  #bottomleft
+          context.drawImage background, 0, 0, @width - xOffset, @height - yOffset, xOffset, yOffset, @width - xOffset, @height - yOffset #bottomright
+        else if xOffset?
           context.drawImage background, background.width - xOffset, @y, xOffset, @height, 0, 0, xOffset, @height  #left
           context.drawImage background, 0, @y, @width - xOffset, @height, xOffset, 0, @width - xOffset, @height #right
         else if yOffset?
@@ -530,7 +535,7 @@ window.game = game =
           @engine.init().pause()
           window.vessel = game.engine.vessel
           window.asteroids = game.engine.asteroids
-          vessel.position.x = 2000
+          vessel.position.x = 100
           vessel.position.y = 100
 
     for url of @images

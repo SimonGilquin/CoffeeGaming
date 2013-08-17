@@ -532,7 +532,12 @@
             } else if (this.y < 0) {
               yOffset = -this.y;
             }
-            if (xOffset != null) {
+            if ((xOffset != null) && (yOffset != null)) {
+              context.drawImage(background, background.width - xOffset, background.height - yOffset, xOffset, yOffset, 0, 0, xOffset, yOffset);
+              context.drawImage(background, 0, background.height - yOffset, this.width - xOffset, yOffset, xOffset, 0, this.width - xOffset, yOffset);
+              context.drawImage(background, background.width - xOffset, 0, xOffset, this.height - yOffset, 0, yOffset, xOffset, this.height - yOffset);
+              context.drawImage(background, 0, 0, this.width - xOffset, this.height - yOffset, xOffset, yOffset, this.width - xOffset, this.height - yOffset);
+            } else if (xOffset != null) {
               context.drawImage(background, background.width - xOffset, this.y, xOffset, this.height, 0, 0, xOffset, this.height);
               context.drawImage(background, 0, this.y, this.width - xOffset, this.height, xOffset, 0, this.width - xOffset, this.height);
             } else if (yOffset != null) {
@@ -920,7 +925,7 @@
             _this.engine.init().pause();
             window.vessel = game.engine.vessel;
             window.asteroids = game.engine.asteroids;
-            vessel.position.x = 2000;
+            vessel.position.x = 100;
             return vessel.position.y = 100;
           }
         };
