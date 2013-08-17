@@ -26,7 +26,7 @@ describe 'The game engine', ->
     it 'can be paused', ->
       engine.pause()
       expect(engine.isPaused()).toBeTruthy()
-  describe 'performance counters', ->
+  xdescribe 'performance counters', ->
     it 'should work when there is no performance.now()', ->
       old = window.performance
       window.performance = null

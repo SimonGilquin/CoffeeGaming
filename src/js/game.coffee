@@ -1,25 +1,48 @@
-debug = false #or true
-enableLog = (object) ->
-  overload = (name, instance) ->
+debug = true
+showconsole = false
+enableLog = (object, name) ->
+  overload = (instance, name) ->
     old = instance[name]
     instance[name] = (args...) =>
       console.log "#{name}(#{args})"
       old.apply instance, args
 
-  for id, prop of object when typeof prop == 'function'
-    overload id, object
+  if name?
+    overload object, name
+  else
+    for id, prop of object when typeof prop == 'function'
+      overload object, id
   true
 
 distanceBetween = (pointA, pointB) ->
   Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2))
+
+log = (text) ->
+  console.log text
 
 canvas = document.createElement 'canvas'
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 document.body.appendChild canvas
 context = canvas.getContext '2d'
-enableLog(context) if debug
+
 surface = null
+if showconsole
+  canvas.width = window.innerWidth - 200
+  inDocumentConsole = document.createElement 'div'
+  inDocumentConsole.setAttribute 'class', 'console'
+  inDocumentConsole.append = (text) ->
+    element = document.createElement 'p'
+    element.innerText = text
+    @appendChild element
+  document.body.appendChild inDocumentConsole
+  oldLog = console.log
+  console.log = (args...) ->
+    inDocumentConsole.append args...
+    oldLog.apply console, args
+
+log "Window is (#{window.innerWidth}, #{window.innerHeight})"
+log "Canvas created with (#{canvas.width}, #{canvas.height})"
 
 createSurface = ->
   surface =
@@ -223,7 +246,9 @@ keymap =
   37: 'left'
   38: 'thrust'
   39: 'right'
+  40: 'reverse'
   27: 'escape'
+  32: 'stop'
 
 class Engine
   constructor: ->
@@ -235,26 +260,48 @@ class Engine
       keyboard[key] = false
     @keyboard = keyboard
     @collisions = []
-    @viewport =
-      x: @surface.width / 2 - canvas.width / 2
-      y: @surface.height / 2 - canvas.height / 2
-      width: canvas.width
-      height: canvas.height
+    @viewport = (=>
+      x = @surface.width / 2 - canvas.width / 2
+      y = @surface.height / 2 - canvas.height / 2
+      width = canvas.width
+      height = canvas.height
+      log "Viewport is at (#{x}, #{y}) with (#{width}, #{height})"
+      background = game.images['space.jpg']
+      x: x
+      y: y
+      width: width
+      height: height
       draw: ->
         context.clearRect 0, 0, canvas.width, canvas.height
         @x = game.engine.vessel.position.x - canvas.width / 2
         @y = game.engine.vessel.position.y - canvas.height / 2
-        context.drawImage game.images['space.jpg'], @x, @y, @width, @height, 0, 0, @width, @height
+#        if debug
+#          logText = "Space.jpg(#{@x}, #{@y}, #{@width}, #{@height}) drawn at 0, 0"
+#          unless logText is oldLogText
+#            console.log logText
+#            oldLogText = logText
+        if background.width < @width + @x
+          xOffset = background.width - @x
+          context.drawImage background, @x, @y, xOffset, @height, 0, 0, xOffset, @height  #left
+          context.drawImage background, 0, @y, @width - xOffset, @height, xOffset, 0, @width - xOffset, @height #right
+        if @x < 0
+          xOffset = -@x
+          context.drawImage background, background.width + @x, @y, -@x, @height, 0, 0, -@x, @height  #left
+          context.drawImage background, 0, @y, @width - xOffset, @height, xOffset, 0, @width - xOffset, @height #right
+
+        context.drawImage background, @x, @y, @width, @height, 0, 0, @width, @height
 
         asteroid.drawAt(@x, @y) for asteroid in game.engine.asteroids
         game.engine.vessel.drawAt @x, @y
         game.engine.hud.draw()
+    )()
 
   running: null
   counters:
     start: Date.now()
     frames: 0
     add: ->
+      timing = -> performance?.now?() or window.Date.now()
       countersElement = document.createElement 'div'
       countersElement.setAttribute 'class', 'counters'
 
@@ -271,23 +318,27 @@ class Engine
       updateTime = createCounter('Update')
       drawTime = createCounter('Draw')
       collisions = createCounter('Collisions')
+      camera = createCounter('Camera')
+      ship = createCounter('Ship')
 
       document.body.appendChild countersElement
 
-      fps.lastUpdate = performance.now()
+      fps.lastUpdate = timing()
       fps.lastFrameCount = 0
       oldUpdate = game.engine.update
       oldDraw = game.engine.draw
       collisions.total = 0
       game.engine.update = =>
-        updateStart = performance.now()
+        updateStart = timing()
         oldUpdate()
         collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
-        updateTime.innerHTML = Math.round performance.now() - updateStart
+        updateTime.innerHTML = Math.round timing() - updateStart
+        camera.innerHTML = "#{Math.floor(game.engine.viewport.x)}, #{Math.floor(game.engine.viewport.y)}"
+        ship.innerHTML = "#{Math.floor(game.engine.vessel.position.x)}, #{Math.floor(game.engine.vessel.position.y)}"
       game.engine.draw = =>
-        drawStart = performance.now()
+        drawStart = timing()
         oldDraw()
-        endLoop = performance.now()
+        endLoop = timing()
         drawTime.innerHTML = Math.round endLoop - drawStart
         @frames++
         if endLoop - fps.lastUpdate > 250
@@ -306,7 +357,7 @@ class Engine
     @draw()
   draw: => @viewport.draw()
   init: ->
-    @counters.add() if performance?.now?
+    @counters.add() if debug
     animFrame = window.requestAnimationFrame
     window.webkitRequestAnimationFrame unless animFrame?
     window.mozRequestAnimationFrame unless animFrame?
@@ -427,6 +478,18 @@ class Engine
     if vessel.thrust
       vessel.vector.x += Math.cos(vessel.orientation) * vessel.acceleration
       vessel.vector.y += Math.sin(vessel.orientation) * vessel.acceleration
+    if @keyboard.reverse
+      vessel.vector.x -= Math.cos(vessel.orientation) * vessel.acceleration * .2
+      vessel.vector.y -= Math.sin(vessel.orientation) * vessel.acceleration * .2
+    if @keyboard.stop
+      if vessel.vector.x > 0
+        vessel.vector.x -= Math.min(vessel.acceleration * .2, vessel.vector.x * vessel.acceleration)
+      else
+        vessel.vector.x += Math.min(vessel.acceleration * .2, -vessel.vector.x * vessel.acceleration)
+      if vessel.vector.y > 0
+        vessel.vector.y -= Math.min(vessel.acceleration * .2, vessel.vector.y * vessel.acceleration)
+      else
+        vessel.vector.y += Math.min(vessel.acceleration * .2, -vessel.vector.y * vessel.acceleration)
     vessel.orientation -= vessel.rotationalSpeed if @keyboard['left']
     vessel.orientation += vessel.rotationalSpeed if @keyboard['right']
     vessel.orientation = vessel.orientation % (2 * Math.PI)
@@ -444,8 +507,8 @@ window.game = game =
   buttons: []
   images:
     'space.jpg' : null
+  debug: debug
   load: ->
-    @engine = new Engine()
     counter = 0
     loadImage = (url) =>
       image = new window.Image()
@@ -454,14 +517,20 @@ window.game = game =
         @images[url] = image
         counter--
         if counter == 0
+          @engine = new Engine()
           @engine.init().pause()
+          window.vessel = game.engine.vessel
+          window.asteroids = game.engine.asteroids
+          vessel.position.x = 3000
+          vessel.position.y = 1000
 
     for url of @images
-      counter++
-      loadImage url
+          counter++
+          loadImage url
   reset: ->
     delete @engine
 
 game.load()
 #game.init().pause()
+
 

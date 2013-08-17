@@ -41,7 +41,7 @@
         return expect(engine.isPaused()).toBeTruthy();
       });
     });
-    return describe('performance counters', function() {
+    return xdescribe('performance counters', function() {
       return it('should work when there is no performance.now()', function() {
         var old;
         old = window.performance;

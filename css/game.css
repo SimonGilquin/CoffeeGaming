@@ -12,6 +12,10 @@ canvas{
     right: 0;
 }
 
+p {
+    margin: 0;
+}
+
 .counters{
     position: absolute;
     top: 0;
@@ -19,6 +23,9 @@ canvas{
     color: white;
 }
 
-    .counters p {
-        margin: 0;
-    }
+.console{
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 200px;
+}
