@@ -282,11 +282,11 @@ class Engine
 #            oldLogText = logText
         if background.width < @width + @x
           xOffset = background.width - @x
-          context.drawImage background, @x, @y, xOffset, @height, 0, 0, xOffset, @height  #left
+          context.drawImage background, background.width - xOffset, @y, xOffset, @height, 0, 0, xOffset, @height  #left
           context.drawImage background, 0, @y, @width - xOffset, @height, xOffset, 0, @width - xOffset, @height #right
         if @x < 0
           xOffset = -@x
-          context.drawImage background, background.width + @x, @y, -@x, @height, 0, 0, -@x, @height  #left
+          context.drawImage background, background.width - xOffset, @y, xOffset, @height, 0, 0, xOffset, @height  #left
           context.drawImage background, 0, @y, @width - xOffset, @height, xOffset, 0, @width - xOffset, @height #right
 
         context.drawImage background, @x, @y, @width, @height, 0, 0, @width, @height
@@ -334,7 +334,7 @@ class Engine
         collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
         updateTime.innerHTML = Math.round timing() - updateStart
         camera.innerHTML = "#{Math.floor(game.engine.viewport.x)}, #{Math.floor(game.engine.viewport.y)}"
-        ship.innerHTML = "#{Math.floor(game.engine.vessel.position.x)}, #{Math.floor(game.engine.vessel.position.y)}"
+        ship.innerHTML = "#{Math.floor(game.engine.vessel.position.x)}, #{Math.floor(game.engine.vessel.position.y)}, (#{game.engine.vessel.vector.x}, #{game.engine.vessel.vector.y})"
       game.engine.draw = =>
         drawStart = timing()
         oldDraw()
@@ -490,6 +490,8 @@ class Engine
         vessel.vector.y -= Math.min(vessel.acceleration * .2, vessel.vector.y * vessel.acceleration)
       else
         vessel.vector.y += Math.min(vessel.acceleration * .2, -vessel.vector.y * vessel.acceleration)
+      vessel.vector.x = 0 if -.01 < vessel.vector.x < .01
+      vessel.vector.y = 0 if -.01 < vessel.vector.y < .01
     vessel.orientation -= vessel.rotationalSpeed if @keyboard['left']
     vessel.orientation += vessel.rotationalSpeed if @keyboard['right']
     vessel.orientation = vessel.orientation % (2 * Math.PI)

@@ -524,12 +524,12 @@
             this.y = game.engine.vessel.position.y - canvas.height / 2;
             if (background.width < this.width + this.x) {
               xOffset = background.width - this.x;
-              context.drawImage(background, this.x, this.y, xOffset, this.height, 0, 0, xOffset, this.height);
+              context.drawImage(background, background.width - xOffset, this.y, xOffset, this.height, 0, 0, xOffset, this.height);
               context.drawImage(background, 0, this.y, this.width - xOffset, this.height, xOffset, 0, this.width - xOffset, this.height);
             }
             if (this.x < 0) {
               xOffset = -this.x;
-              context.drawImage(background, background.width + this.x, this.y, -this.x, this.height, 0, 0, -this.x, this.height);
+              context.drawImage(background, background.width - xOffset, this.y, xOffset, this.height, 0, 0, xOffset, this.height);
               context.drawImage(background, 0, this.y, this.width - xOffset, this.height, xOffset, 0, this.width - xOffset, this.height);
             }
             context.drawImage(background, this.x, this.y, this.width, this.height, 0, 0, this.width, this.height);
@@ -587,7 +587,7 @@
           collisions.innerHTML = "" + game.engine.collisions.length + " (total: " + (collisions.total += game.engine.collisions.length) + ")";
           updateTime.innerHTML = Math.round(timing() - updateStart);
           camera.innerHTML = "" + (Math.floor(game.engine.viewport.x)) + ", " + (Math.floor(game.engine.viewport.y));
-          return ship.innerHTML = "" + (Math.floor(game.engine.vessel.position.x)) + ", " + (Math.floor(game.engine.vessel.position.y));
+          return ship.innerHTML = "" + (Math.floor(game.engine.vessel.position.x)) + ", " + (Math.floor(game.engine.vessel.position.y)) + ", (" + game.engine.vessel.vector.x + ", " + game.engine.vessel.vector.y + ")";
         };
         return game.engine.draw = function() {
           var drawStart, endLoop;
@@ -809,6 +809,7 @@
     };
 
     Engine.prototype.updateVessel = function(vessel) {
+      var _ref, _ref1;
       vessel.position.x += vessel.vector.x;
       if (vessel.position.x > game.engine.surface.width) {
         vessel.position.x = 0;
@@ -842,6 +843,12 @@
           vessel.vector.y -= Math.min(vessel.acceleration * .2, vessel.vector.y * vessel.acceleration);
         } else {
           vessel.vector.y += Math.min(vessel.acceleration * .2, -vessel.vector.y * vessel.acceleration);
+        }
+        if ((-.01 < (_ref = vessel.vector.x) && _ref < .01)) {
+          vessel.vector.x = 0;
+        }
+        if ((-.01 < (_ref1 = vessel.vector.y) && _ref1 < .01)) {
+          vessel.vector.y = 0;
         }
       }
       if (this.keyboard['left']) {
