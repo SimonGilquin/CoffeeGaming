@@ -2,9 +2,9 @@
 (function() {
   describe('The game engine', function() {
     var engine;
-    engine = game.engine;
+    engine = null;
     beforeEach(function() {
-      game.load();
+      game.engine = engine = new Engine();
       return engine.init();
     });
     it('should have a surface', function() {

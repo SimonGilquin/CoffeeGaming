@@ -1,11 +1,10 @@
 describe 'The HUD', ->
   hud = null
-  engine = null
   inResume = null
+  engine = null
   beforeEach ->
-    game.load()
+    game.engine = engine = new Engine()
     game.engine.init()
-    engine = game.engine
     hud = engine.hud
     inResume =
       x: hud.pauseScreen.resumeButton.x + 10
@@ -31,7 +30,7 @@ describe 'The HUD', ->
         expect(screen.visible).toBeTruthy()
       it 'should display "Game paused"', ->
         expect(screen.text.text).toBe 'Game paused'
-        expect(screen.text.style).toBe 'black'
+        expect(screen.text.style).toBe 'white'
         expect(screen.text.font).toBe '48px sans-serif'
       describe 'when drawn', ->
         contextMock = null

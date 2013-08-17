@@ -1,7 +1,7 @@
 describe 'The game engine', ->
-  engine = game.engine
+  engine = null
   beforeEach ->
-    game.load()
+    game.engine = engine = new Engine()
     engine.init()
   it 'should have a surface', ->
     expect(engine.surface).toBeDefined()

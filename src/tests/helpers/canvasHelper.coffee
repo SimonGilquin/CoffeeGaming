@@ -4,6 +4,7 @@ window.getCanvas = ->
 CanvasRenderingContext2D.prototype.drawImage = (args...) ->
 window.requestAnimationFrame = window.webkitRequestAnimationFrame = ->
 
+window.console.log = ->
 class ImageHelper
   constructor: ->
     ImageHelper.items.push @
@@ -11,5 +12,7 @@ class ImageHelper
   onload: ->
   @loadAll: ->
     item.onload() for item in ImageHelper.items
-window.ImageHelper = ImageHelper
-
+window.Image = ImageHelper
+game.images['space.jpg'] =
+  width: 4000
+  height: 3000

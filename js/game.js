@@ -507,6 +507,8 @@
   };
 
   Engine = (function() {
+    var enableCounters;
+
     function Engine() {
       this.update = __bind(this.update, this);
       this.play = __bind(this.play, this);
@@ -686,10 +688,12 @@
       return this.viewport.draw();
     };
 
+    enableCounters = false;
+
     Engine.prototype.init = function() {
       var animFrame, recursive,
         _this = this;
-      if (debug) {
+      if (this.enableCounters) {
         this.counters.add();
       }
       animFrame = window.requestAnimationFrame;
@@ -841,11 +845,10 @@
         collision.source.collides = false;
         collision.target.collides = false;
       }
-      this.collisions = [];
       firstpass = [];
       for (id = _j = 0, _len1 = asteroids.length; _j < _len1; id = ++_j) {
         asteroid = asteroids[id];
-        if (vessel.distanceFrom(asteroid) < (asteroid.size + vessel.size) / 2) {
+        if (distanceBetween(vessel.position, asteroid.position) <= (asteroid.size + vessel.size) / 2) {
           firstpass.push({
             source: vessel,
             target: asteroid
@@ -854,7 +857,7 @@
         _ref1 = asteroids.slice(id + 1);
         for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
           secondAsteroid = _ref1[_k];
-          if (distanceBetween(asteroid.position, secondAsteroid.position) < (asteroid.size + secondAsteroid.size) / 2) {
+          if (distanceBetween(asteroid.position, secondAsteroid.position) <= (asteroid.size + secondAsteroid.size) / 2) {
             firstpass.push({
               source: asteroid,
               target: secondAsteroid
@@ -868,7 +871,11 @@
       for (_l = 0, _len3 = _ref2.length; _l < _len3; _l++) {
         collision = _ref2[_l];
         collision.source.collides = true;
-        _results.push(collision.target.collides = true);
+        collision.target.collides = true;
+        collision.source.vector.x = -collision.source.vector.x;
+        collision.source.vector.y = -collision.source.vector.y;
+        collision.target.vector.x = -collision.target.vector.x;
+        _results.push(collision.target.vector.y = -collision.target.vector.y);
       }
       return _results;
     };
@@ -974,6 +981,7 @@
           counter--;
           if (counter === 0) {
             _this.engine = new Engine();
+            _this.engine.enableCounters = true;
             _this.engine.init().pause();
             window.vessel = game.engine.vessel;
             return window.asteroids = game.engine.asteroids;
@@ -992,6 +1000,8 @@
     }
   };
 
-  game.load();
+  window.Engine = Engine;
+
+  window.Asteroid = Asteroid;
 
 }).call(this);

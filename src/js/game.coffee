@@ -392,8 +392,9 @@ class Engine
     @update()
     @draw()
   draw: => @viewport.draw()
+  enableCounters = false
   init: ->
-    @counters.add() if debug
+    @counters.add() if @enableCounters
     animFrame = window.requestAnimationFrame
     window.webkitRequestAnimationFrame unless animFrame?
     window.mozRequestAnimationFrame unless animFrame?
@@ -491,15 +492,14 @@ class Engine
     for collision in @collisions
       collision.source.collides = false
       collision.target.collides = false
-    @collisions = []
 
     firstpass = []
     for asteroid, id in asteroids
-      if vessel.distanceFrom(asteroid) < (asteroid.size + vessel.size) / 2
+      if distanceBetween(vessel.position, asteroid.position) <= (asteroid.size + vessel.size) / 2
         firstpass.push
           source: vessel
           target: asteroid
-      for secondAsteroid in asteroids[id+1..] when distanceBetween(asteroid.position, secondAsteroid.position) < (asteroid.size + secondAsteroid.size) / 2
+      for secondAsteroid in asteroids[id+1..] when distanceBetween(asteroid.position, secondAsteroid.position) <= (asteroid.size + secondAsteroid.size) / 2
         firstpass.push
           source: asteroid
           target: secondAsteroid
@@ -508,6 +508,10 @@ class Engine
     for collision in @collisions
       collision.source.collides = true
       collision.target.collides = true
+      collision.source.vector.x = -collision.source.vector.x
+      collision.source.vector.y = -collision.source.vector.y
+      collision.target.vector.x = -collision.target.vector.x
+      collision.target.vector.y = -collision.target.vector.y
   #game.engine.collisions.push 'Vessel crashed into asteroid!' if collisions.length > 0
 
   updateVessel: (vessel) ->
@@ -563,6 +567,7 @@ window.game = game =
         counter--
         if counter == 0
           @engine = new Engine()
+          @engine.enableCounters = true
           @engine.init().pause()
           window.vessel = game.engine.vessel
           window.asteroids = game.engine.asteroids
@@ -573,7 +578,9 @@ window.game = game =
   reset: ->
     delete @engine
 
-game.load()
-#game.init().pause()
+window.Engine = Engine
+window.Asteroid = Asteroid
 
+#game.load()
+#game.init().pause()
 

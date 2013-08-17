@@ -14,6 +14,8 @@
 
   window.requestAnimationFrame = window.webkitRequestAnimationFrame = function() {};
 
+  window.console.log = function() {};
+
   ImageHelper = (function() {
     function ImageHelper() {
       ImageHelper.items.push(this);
@@ -38,6 +40,11 @@
 
   })();
 
-  window.ImageHelper = ImageHelper;
+  window.Image = ImageHelper;
+
+  game.images['space.jpg'] = {
+    width: 4000,
+    height: 3000
+  };
 
 }).call(this);

@@ -3,12 +3,11 @@
   describe('The HUD', function() {
     var engine, hud, inResume;
     hud = null;
-    engine = null;
     inResume = null;
+    engine = null;
     beforeEach(function() {
-      game.load();
+      game.engine = engine = new Engine();
       game.engine.init();
-      engine = game.engine;
       hud = engine.hud;
       return inResume = {
         x: hud.pauseScreen.resumeButton.x + 10,
@@ -42,7 +41,7 @@
         });
         it('should display "Game paused"', function() {
           expect(screen.text.text).toBe('Game paused');
-          expect(screen.text.style).toBe('black');
+          expect(screen.text.style).toBe('white');
           return expect(screen.text.font).toBe('48px sans-serif');
         });
         return describe('when drawn', function() {

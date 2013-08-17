@@ -1,14 +1,8 @@
 describe 'Asteroids', ->
   engine = null
-  oldImage = null
   beforeEach ->
-    oldImage = window.Image
-    window.Image = ImageHelper
-    game.load()
-    window.Image.loadAll()
-    engine = game.engine
-  afterEach ->
-    window.Image = oldImage
+    game.engine = engine = new Engine()
+    engine.init()
 
   it 'when playing updates asteroids on game ticks', ->
     spyOn engine, 'updateAsteroids'

@@ -2,14 +2,9 @@ describe 'The vessel', ->
   engine = null
   oldImage = null
   beforeEach ->
-    oldImage = window.Image
-    window.Image = ImageHelper
-    game.load()
-    window.Image.loadAll()
-    engine = game.engine
+    game.engine = engine = new Engine()
+    engine.init()
     engine.play()
-  afterEach ->
-    window.Image = oldImage
 
   it 'when playing updates on game ticks', ->
     spyOn engine, 'updateVessel'
@@ -37,7 +32,7 @@ describe 'The vessel', ->
 
   it 'does NOT collide any asteroids', ->
     engine.update()
-    expect(engine.collisions.length).toBe 0
+    expect(engine.vessel.collides).toBeFalsy()
   it 'is in the center of the game surface', ->
     vessel = engine.createVessel()
     expect(vessel.position.x).toBe(engine.surface.width/2)

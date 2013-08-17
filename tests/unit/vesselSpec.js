@@ -5,15 +5,9 @@
     engine = null;
     oldImage = null;
     beforeEach(function() {
-      oldImage = window.Image;
-      window.Image = ImageHelper;
-      game.load();
-      window.Image.loadAll();
-      engine = game.engine;
+      game.engine = engine = new Engine();
+      engine.init();
       return engine.play();
-    });
-    afterEach(function() {
-      return window.Image = oldImage;
     });
     it('when playing updates on game ticks', function() {
       spyOn(engine, 'updateVessel');
@@ -44,7 +38,7 @@
     });
     it('does NOT collide any asteroids', function() {
       engine.update();
-      return expect(engine.collisions.length).toBe(0);
+      return expect(engine.vessel.collides).toBeFalsy();
     });
     it('is in the center of the game surface', function() {
       var vessel;
