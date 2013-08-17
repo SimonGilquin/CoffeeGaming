@@ -104,7 +104,7 @@ class Button extends Drawable
 class Screen extends Drawable
   visible: false
   constructor: (@x, @y, @w, @h, @background) ->
-    @text = new Text 'Game paused', 'black', 48, canvas.width/2, 280
+    @text = new Text 'Game paused', 'white', 48, canvas.width/2, 280
     @resumeButton = new Button(canvas.width / 2 - 80, 320, 160, 40).withText('Resume...', '#fff', 28)
   drawElement: (x, y) ->
     if @background?
@@ -282,14 +282,21 @@ class Engine
 #            oldLogText = logText
         if background.width < @width + @x
           xOffset = background.width - @x
-          context.drawImage background, background.width - xOffset, @y, xOffset, @height, 0, 0, xOffset, @height  #left
-          context.drawImage background, 0, @y, @width - xOffset, @height, xOffset, 0, @width - xOffset, @height #right
-        if @x < 0
+        else if @x < 0
           xOffset = -@x
+        if background.height < @height + @y
+          yOffset = background.height - @y
+        else if @y < 0
+          yOffset = -@y
+
+        if xOffset?
           context.drawImage background, background.width - xOffset, @y, xOffset, @height, 0, 0, xOffset, @height  #left
           context.drawImage background, 0, @y, @width - xOffset, @height, xOffset, 0, @width - xOffset, @height #right
-
-        context.drawImage background, @x, @y, @width, @height, 0, 0, @width, @height
+        else if yOffset?
+          context.drawImage background, @x, background.height - yOffset, @width, yOffset, 0, 0, @width, yOffset  #top
+          context.drawImage background, @x, 0, @width, @height - yOffset, 0, yOffset, @width, @height - yOffset #bottom
+        else
+          context.drawImage background, @x, @y, @width, @height, 0, 0, @width, @height
 
         asteroid.drawAt(@x, @y) for asteroid in game.engine.asteroids
         game.engine.vessel.drawAt @x, @y
@@ -523,8 +530,8 @@ window.game = game =
           @engine.init().pause()
           window.vessel = game.engine.vessel
           window.asteroids = game.engine.asteroids
-          vessel.position.x = 3000
-          vessel.position.y = 1000
+          vessel.position.x = 2000
+          vessel.position.y = 100
 
     for url of @images
           counter++

@@ -232,7 +232,7 @@
       this.w = w;
       this.h = h;
       this.background = background;
-      this.text = new Text('Game paused', 'black', 48, canvas.width / 2, 280);
+      this.text = new Text('Game paused', 'white', 48, canvas.width / 2, 280);
       this.resumeButton = new Button(canvas.width / 2 - 80, 320, 160, 40).withText('Resume...', '#fff', 28);
     }
 
@@ -518,21 +518,29 @@
           width: width,
           height: height,
           draw: function() {
-            var asteroid, xOffset, _i, _len, _ref;
+            var asteroid, xOffset, yOffset, _i, _len, _ref;
             context.clearRect(0, 0, canvas.width, canvas.height);
             this.x = game.engine.vessel.position.x - canvas.width / 2;
             this.y = game.engine.vessel.position.y - canvas.height / 2;
             if (background.width < this.width + this.x) {
               xOffset = background.width - this.x;
-              context.drawImage(background, background.width - xOffset, this.y, xOffset, this.height, 0, 0, xOffset, this.height);
-              context.drawImage(background, 0, this.y, this.width - xOffset, this.height, xOffset, 0, this.width - xOffset, this.height);
-            }
-            if (this.x < 0) {
+            } else if (this.x < 0) {
               xOffset = -this.x;
+            }
+            if (background.height < this.height + this.y) {
+              yOffset = background.height - this.y;
+            } else if (this.y < 0) {
+              yOffset = -this.y;
+            }
+            if (xOffset != null) {
               context.drawImage(background, background.width - xOffset, this.y, xOffset, this.height, 0, 0, xOffset, this.height);
               context.drawImage(background, 0, this.y, this.width - xOffset, this.height, xOffset, 0, this.width - xOffset, this.height);
+            } else if (yOffset != null) {
+              context.drawImage(background, this.x, background.height - yOffset, this.width, yOffset, 0, 0, this.width, yOffset);
+              context.drawImage(background, this.x, 0, this.width, this.height - yOffset, 0, yOffset, this.width, this.height - yOffset);
+            } else {
+              context.drawImage(background, this.x, this.y, this.width, this.height, 0, 0, this.width, this.height);
             }
-            context.drawImage(background, this.x, this.y, this.width, this.height, 0, 0, this.width, this.height);
             _ref = game.engine.asteroids;
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               asteroid = _ref[_i];
@@ -912,8 +920,8 @@
             _this.engine.init().pause();
             window.vessel = game.engine.vessel;
             window.asteroids = game.engine.asteroids;
-            vessel.position.x = 3000;
-            return vessel.position.y = 1000;
+            vessel.position.x = 2000;
+            return vessel.position.y = 100;
           }
         };
       };

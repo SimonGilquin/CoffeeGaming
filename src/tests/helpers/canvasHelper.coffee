@@ -12,3 +12,4 @@ class ImageHelper
   @loadAll: ->
     item.onload() for item in ImageHelper.items
 window.ImageHelper = ImageHelper
+
