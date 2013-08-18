@@ -1,5 +1,11 @@
 Number.prototype.toDeg = ->
   this * 180 / Math.PI
+Number.prototype.humanize = (precision = 2) ->
+  Math.floor(this * Math.pow(10, 2)) / Math.pow(10, 2)
+Array.prototype.remove = (args...) ->
+  for item in args
+    index = @indexOf item
+    @splice index, 1 unless index < 0
 
 debug = true
 showconsole = false
@@ -320,11 +326,6 @@ class Engine
         context.clearRect 0, 0, canvas.width, canvas.height
         @x = game.engine.vessel.position.x - canvas.width / 2
         @y = game.engine.vessel.position.y - canvas.height / 2
-#        if debug
-#          logText = "Space.jpg(#{@x}, #{@y}, #{@width}, #{@height}) drawn at 0, 0"
-#          unless logText is oldLogText
-#            console.log logText
-#            oldLogText = logText
         if background.width < @width + @x
           xOffset = background.width - @x
         else if @x < 0
@@ -368,15 +369,15 @@ class Engine
           drawnAt.y += surface.height if drawnAt.y + surface.height < @height
           bullet.drawAt(drawnAt.x, drawnAt.y) if 0 <= drawnAt.x <= @width and 0 <= drawnAt.y <= @height
           
-        if game.engine.debug?
-          context.beginPath()
-          context.strokeStyle = 'red'
-          context.lineWidth = 2
-          x = game.engine.debug.contactPoint.x - @x
-          y = game.engine.debug.contactPoint.y - @y
-          context.arc x, y, 5, 0, 2 * Math.PI
-          context.fillText game.engine.debug.angle, x, y
-          context.stroke()
+#        for collision in game.engine.collisions
+#          context.beginPath()
+#          context.strokeStyle = 'red'
+#          context.lineWidth = 2
+#          x = collision.contactPoint.x - @x
+#          y = collision.contactPoint.y - @y
+#          context.arc x, y, 5, 0, 2 * Math.PI
+#          context.fillText collision.angle, x, y
+#          context.stroke()
 
         game.engine.vessel.drawAt @x, @y
         game.engine.hud.draw()
@@ -406,6 +407,7 @@ class Engine
       collisions = createCounter('Collisions')
       camera = createCounter('Camera')
       ship = createCounter('Ship')
+      asteroids = createCounter('Asteroids')
 
       document.body.appendChild countersElement
 
@@ -419,18 +421,19 @@ class Engine
         oldUpdate()
         endUpdate = timing()
         if endUpdate - lastUpdate > 250
-          collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
-          updateTime.innerHTML = Math.round endUpdate - updateStart
-          camera.innerHTML = "#{Math.floor(game.engine.viewport.x)}, #{Math.floor(game.engine.viewport.y)}"
-          ship.innerHTML = "#{Math.floor(game.engine.vessel.position.x)}, #{Math.floor(game.engine.vessel.position.y)}, (#{game.engine.vessel.vector.x}, #{game.engine.vessel.vector.y})"
+          collisions.innerText = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
+          updateTime.innerText = (endUpdate - updateStart).humanize()
+          camera.innerText = "#{game.engine.viewport.x.humanize()}, #{game.engine.viewport.y.humanize()}"
+          ship.innerText = "#{game.engine.vessel.position.x.humanize()}, #{game.engine.vessel.position.y.humanize()}, #{speedOf(game.engine.vessel).humanize()} px/tick (#{game.engine.vessel.vector.x.humanize()}, #{game.engine.vessel.vector.y.humanize()})"
+          asteroids.innerText = game.engine.asteroids.length
       game.engine.draw = =>
         drawStart = timing()
         oldDraw()
         endLoop = timing()
-        drawTime.innerHTML = Math.round endLoop - drawStart
+        drawTime.innerText = Math.round endLoop - drawStart
         @frames++
         if endLoop - lastUpdate > 250
-          fps.innerHTML = @fps = Math.round((@frames - fps.lastFrameCount) * 1000 / (endLoop - lastUpdate))
+          fps.innerText = ((@frames - fps.lastFrameCount) * 1000 / (endLoop - lastUpdate)).humanize()
           lastUpdate = endLoop
           fps.lastFrameCount = @frames
   cursor:
@@ -536,7 +539,7 @@ class Engine
     unless @isPaused()
       @updateCollisions @vessel, @asteroids
       @updateAsteroids()
-      @updatePositions @bullets
+      @updateBullets @bullets
       @updateVessel @vessel
 
   updateCollisions: (vessel, asteroids) ->
@@ -656,17 +659,27 @@ class Engine
   updateAsteroids: ->
     @updatePositions @asteroids
 
+  updateBullets: (bullets) ->
+    for bullet in bullets by -1
+      if --bullet.lifetime <= 0
+        bullets.remove bullet
+      else
+        @updatePosition bullet
+
   updatePositions: (collection) ->
     for item in collection
-      item.position.x += item.vector.x
-      item.position.x = 0 if item.position.x > game.engine.surface.width
-      item.position.x = game.engine.surface.width if item.position.x < 0
-      item.position.y += item.vector.y
-      item.position.y = 0 if item.position.y > game.engine.surface.height
-      item.position.y = game.engine.surface.height if item.position.y < 0
+      @updatePosition item
+
+  updatePosition: (item) ->
+    item.position.x += item.vector.x
+    item.position.x = 0 if item.position.x > game.engine.surface.width
+    item.position.x = game.engine.surface.width if item.position.x < 0
+    item.position.y += item.vector.y
+    item.position.y = 0 if item.position.y > game.engine.surface.height
+    item.position.y = game.engine.surface.height if item.position.y < 0
 
 class Bullet
-  constructor: (@position, @vector, @mass = .1, @size = 10) ->
+  constructor: (@position, @vector, @mass = .1, @size = 10, @lifetime = 400) ->
     @damage = 100 * @mass
   drawAt: (x, y) ->
     context.beginPath()

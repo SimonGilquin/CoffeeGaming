@@ -10,6 +10,29 @@
     return this * 180 / Math.PI;
   };
 
+  Number.prototype.humanize = function(precision) {
+    if (precision == null) {
+      precision = 2;
+    }
+    return Math.floor(this * Math.pow(10, 2)) / Math.pow(10, 2);
+  };
+
+  Array.prototype.remove = function() {
+    var args, index, item, _i, _len, _results;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    _results = [];
+    for (_i = 0, _len = args.length; _i < _len; _i++) {
+      item = args[_i];
+      index = this.indexOf(item);
+      if (!(index < 0)) {
+        _results.push(this.splice(index, 1));
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
+  };
+
   debug = true;
 
   showconsole = false;
@@ -664,16 +687,6 @@
                 bullet.drawAt(drawnAt.x, drawnAt.y);
               }
             }
-            if (game.engine.debug != null) {
-              context.beginPath();
-              context.strokeStyle = 'red';
-              context.lineWidth = 2;
-              x = game.engine.debug.contactPoint.x - this.x;
-              y = game.engine.debug.contactPoint.y - this.y;
-              context.arc(x, y, 5, 0, 2 * Math.PI);
-              context.fillText(game.engine.debug.angle, x, y);
-              context.stroke();
-            }
             game.engine.vessel.drawAt(this.x, this.y);
             return game.engine.hud.draw();
           }
@@ -687,7 +700,7 @@
       start: Date.now(),
       frames: 0,
       add: function() {
-        var camera, collisions, countersElement, createCounter, drawTime, fps, lastUpdate, oldDraw, oldUpdate, ship, timing, updateTime,
+        var asteroids, camera, collisions, countersElement, createCounter, drawTime, fps, lastUpdate, oldDraw, oldUpdate, ship, timing, updateTime,
           _this = this;
         timing = function() {
           return (typeof performance !== "undefined" && performance !== null ? typeof performance.now === "function" ? performance.now() : void 0 : void 0) || window.Date.now();
@@ -710,6 +723,7 @@
         collisions = createCounter('Collisions');
         camera = createCounter('Camera');
         ship = createCounter('Ship');
+        asteroids = createCounter('Asteroids');
         document.body.appendChild(countersElement);
         lastUpdate = timing();
         fps.lastFrameCount = 0;
@@ -722,10 +736,11 @@
           oldUpdate();
           endUpdate = timing();
           if (endUpdate - lastUpdate > 250) {
-            collisions.innerHTML = "" + game.engine.collisions.length + " (total: " + (collisions.total += game.engine.collisions.length) + ")";
-            updateTime.innerHTML = Math.round(endUpdate - updateStart);
-            camera.innerHTML = "" + (Math.floor(game.engine.viewport.x)) + ", " + (Math.floor(game.engine.viewport.y));
-            return ship.innerHTML = "" + (Math.floor(game.engine.vessel.position.x)) + ", " + (Math.floor(game.engine.vessel.position.y)) + ", (" + game.engine.vessel.vector.x + ", " + game.engine.vessel.vector.y + ")";
+            collisions.innerText = "" + game.engine.collisions.length + " (total: " + (collisions.total += game.engine.collisions.length) + ")";
+            updateTime.innerText = (endUpdate - updateStart).humanize();
+            camera.innerText = "" + (game.engine.viewport.x.humanize()) + ", " + (game.engine.viewport.y.humanize());
+            ship.innerText = "" + (game.engine.vessel.position.x.humanize()) + ", " + (game.engine.vessel.position.y.humanize()) + ", " + (speedOf(game.engine.vessel).humanize()) + " px/tick (" + (game.engine.vessel.vector.x.humanize()) + ", " + (game.engine.vessel.vector.y.humanize()) + ")";
+            return asteroids.innerText = game.engine.asteroids.length;
           }
         };
         return game.engine.draw = function() {
@@ -733,10 +748,10 @@
           drawStart = timing();
           oldDraw();
           endLoop = timing();
-          drawTime.innerHTML = Math.round(endLoop - drawStart);
+          drawTime.innerText = Math.round(endLoop - drawStart);
           _this.frames++;
           if (endLoop - lastUpdate > 250) {
-            fps.innerHTML = _this.fps = Math.round((_this.frames - fps.lastFrameCount) * 1000 / (endLoop - lastUpdate));
+            fps.innerText = ((_this.frames - fps.lastFrameCount) * 1000 / (endLoop - lastUpdate)).humanize();
             lastUpdate = endLoop;
             return fps.lastFrameCount = _this.frames;
           }
@@ -915,7 +930,7 @@
       if (!this.isPaused()) {
         this.updateCollisions(this.vessel, this.asteroids);
         this.updateAsteroids();
-        this.updatePositions(this.bullets);
+        this.updateBullets(this.bullets);
         return this.updateVessel(this.vessel);
       }
     };
@@ -1108,29 +1123,45 @@
       return this.updatePositions(this.asteroids);
     };
 
+    Engine.prototype.updateBullets = function(bullets) {
+      var bullet, _i, _results;
+      _results = [];
+      for (_i = bullets.length - 1; _i >= 0; _i += -1) {
+        bullet = bullets[_i];
+        if (--bullet.lifetime <= 0) {
+          _results.push(bullets.remove(bullet));
+        } else {
+          _results.push(this.updatePosition(bullet));
+        }
+      }
+      return _results;
+    };
+
     Engine.prototype.updatePositions = function(collection) {
       var item, _i, _len, _results;
       _results = [];
       for (_i = 0, _len = collection.length; _i < _len; _i++) {
         item = collection[_i];
-        item.position.x += item.vector.x;
-        if (item.position.x > game.engine.surface.width) {
-          item.position.x = 0;
-        }
-        if (item.position.x < 0) {
-          item.position.x = game.engine.surface.width;
-        }
-        item.position.y += item.vector.y;
-        if (item.position.y > game.engine.surface.height) {
-          item.position.y = 0;
-        }
-        if (item.position.y < 0) {
-          _results.push(item.position.y = game.engine.surface.height);
-        } else {
-          _results.push(void 0);
-        }
+        _results.push(this.updatePosition(item));
       }
       return _results;
+    };
+
+    Engine.prototype.updatePosition = function(item) {
+      item.position.x += item.vector.x;
+      if (item.position.x > game.engine.surface.width) {
+        item.position.x = 0;
+      }
+      if (item.position.x < 0) {
+        item.position.x = game.engine.surface.width;
+      }
+      item.position.y += item.vector.y;
+      if (item.position.y > game.engine.surface.height) {
+        item.position.y = 0;
+      }
+      if (item.position.y < 0) {
+        return item.position.y = game.engine.surface.height;
+      }
     };
 
     return Engine;
@@ -1138,11 +1169,12 @@
   })();
 
   Bullet = (function() {
-    function Bullet(position, vector, mass, size) {
+    function Bullet(position, vector, mass, size, lifetime) {
       this.position = position;
       this.vector = vector;
       this.mass = mass != null ? mass : .1;
       this.size = size != null ? size : 10;
+      this.lifetime = lifetime != null ? lifetime : 400;
       this.damage = 100 * this.mass;
     }
 

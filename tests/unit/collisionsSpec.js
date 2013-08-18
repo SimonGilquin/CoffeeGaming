@@ -14,24 +14,9 @@
     });
     describe('on first pass', function() {
       it('should be empty when distances are high', function() {
-        asteroids.push({
-          position: {
-            x: vessel.position.x + 40,
-            y: vessel.position.y
-          }
-        });
-        asteroids.push({
-          position: {
-            x: vessel.position.x,
-            y: vessel.position.y + 40
-          }
-        });
-        asteroids.push({
-          position: {
-            x: vessel.position.x + 20,
-            y: vessel.position.y + 20
-          }
-        });
+        asteroids.push(new Asteroid(vessel.position.x + 100, vessel.position.y));
+        asteroids.push(new Asteroid(vessel.position.x, vessel.position.y + 100));
+        asteroids.push(new Asteroid(vessel.position.x - 80, vessel.position.y - 80));
         engine.updateCollisions(vessel, asteroids);
         return expect(engine.collisions.length).toBe(0);
       });
