@@ -10,6 +10,29 @@
     return this * 180 / Math.PI;
   };
 
+  Number.prototype.humanize = function(precision) {
+    if (precision == null) {
+      precision = 2;
+    }
+    return Math.round(this * Math.pow(10, precision)) / Math.pow(10, precision);
+  };
+
+  Array.prototype.remove = function() {
+    var args, index, item, _i, _len, _results;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    _results = [];
+    for (_i = 0, _len = args.length; _i < _len; _i++) {
+      item = args[_i];
+      index = this.indexOf(item);
+      if (!(index < 0)) {
+        _results.push(this.splice(index, 1));
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
+  };
+
   debug = true;
 
   showconsole = false;
@@ -722,10 +745,11 @@
           oldUpdate();
           endUpdate = timing();
           if (endUpdate - lastUpdate > 250) {
-            collisions.innerHTML = "" + game.engine.collisions.length + " (total: " + (collisions.total += game.engine.collisions.length) + ")";
-            updateTime.innerHTML = Math.round(endUpdate - updateStart);
-            camera.innerHTML = "" + (Math.floor(game.engine.viewport.x)) + ", " + (Math.floor(game.engine.viewport.y));
-            return ship.innerHTML = "" + (Math.floor(game.engine.vessel.position.x)) + ", " + (Math.floor(game.engine.vessel.position.y)) + ", (" + game.engine.vessel.vector.x + ", " + game.engine.vessel.vector.y + ")";
+            collisions.innerText = "" + game.engine.collisions.length + " (total: " + (collisions.total += game.engine.collisions.length) + ")";
+            updateTime.innerText = (endUpdate - updateStart).humanize();
+            camera.innerText = "" + (game.engine.viewport.x.humanize(0)) + ", " + (game.engine.viewport.y.humanize(0));
+            ship.innerText = "" + (game.engine.vessel.position.x.humanize(0)) + ", " + (game.engine.vessel.position.y.humanize(0)) + ", " + (speedOf(game.engine.vessel).humanize()) + " px/tick (" + (game.engine.vessel.vector.x.humanize()) + ", " + (game.engine.vessel.vector.y.humanize()) + ")";
+            return asteroids.innerText = game.engine.asteroids.length;
           }
         };
         return game.engine.draw = function() {
@@ -1181,7 +1205,7 @@
             _this.engine.init().play();
             window.vessel = game.engine.vessel;
             window.asteroids = game.engine.asteroids;
-            if (false) {
+            if (true) {
               _ref = window.asteroids;
               for (_i = 0, _len = _ref.length; _i < _len; _i++) {
                 asteroid = _ref[_i];

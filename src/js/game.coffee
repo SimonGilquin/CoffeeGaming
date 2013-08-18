@@ -1,5 +1,11 @@
 Number.prototype.toDeg = ->
   this * 180 / Math.PI
+Number.prototype.humanize = (precision = 2) ->
+  Math.round(this * Math.pow(10, precision)) / Math.pow(10, precision)
+Array.prototype.remove = (args...) ->
+  for item in args
+    index = @indexOf item
+    @splice index, 1 unless index < 0
 
 debug = true
 showconsole = false
@@ -419,10 +425,11 @@ class Engine
         oldUpdate()
         endUpdate = timing()
         if endUpdate - lastUpdate > 250
-          collisions.innerHTML = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
-          updateTime.innerHTML = Math.round endUpdate - updateStart
-          camera.innerHTML = "#{Math.floor(game.engine.viewport.x)}, #{Math.floor(game.engine.viewport.y)}"
-          ship.innerHTML = "#{Math.floor(game.engine.vessel.position.x)}, #{Math.floor(game.engine.vessel.position.y)}, (#{game.engine.vessel.vector.x}, #{game.engine.vessel.vector.y})"
+          collisions.innerText = "#{game.engine.collisions.length} (total: #{collisions.total += game.engine.collisions.length})"
+          updateTime.innerText = (endUpdate - updateStart).humanize()
+          camera.innerText = "#{game.engine.viewport.x.humanize(0)}, #{game.engine.viewport.y.humanize(0)}"
+          ship.innerText = "#{game.engine.vessel.position.x.humanize(0)}, #{game.engine.vessel.position.y.humanize(0)}, #{speedOf(game.engine.vessel).humanize()} px/tick (#{game.engine.vessel.vector.x.humanize()}, #{game.engine.vessel.vector.y.humanize()})"
+          asteroids.innerText = game.engine.asteroids.length
       game.engine.draw = =>
         drawStart = timing()
         oldDraw()
@@ -693,7 +700,7 @@ window.game = game =
           @engine.init().play()
           window.vessel = game.engine.vessel
           window.asteroids = game.engine.asteroids
-          if false
+          if true
             asteroids.pop() for asteroid in window.asteroids
             asteroids.push new Asteroid 1500, 1200, {x: 0, y: 0}, 100
             #asteroids.push new Asteroid 1900, 800, {x: 1, y: 0}
