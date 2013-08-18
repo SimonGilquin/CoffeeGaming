@@ -71,39 +71,25 @@ describe 'Collisions', ->
       asteroids.push second = new Asteroid 120, 0, {x: -1, y: 0}
       engine.updateCollisions vessel, asteroids
       expect(engine.collisions.length).toBe 1
-      expect(first.vector).toBeEqualTo
-        x: -1
-        y: 0
-      expect(second.vector).toBeEqualTo
-        x: 1
-        y: 0
+      expect(first.vector.x).toBeCloseTo -1
+      expect(first.vector.y).toBeCloseTo 0
+      expect(second.vector.x).toBeCloseTo 1
+      expect(second.vector.y).toBeCloseTo 0
     it 'should invert their Y vector', ->
       asteroids.push first = new Asteroid 0, 80, {x: 0, y: 1}
       asteroids.push second = new Asteroid 0, 120, {x: 0, y: -1}
       engine.updateCollisions vessel, asteroids
       expect(engine.collisions.length).toBe 1
-      expect(first.vector).toBeEqualTo
-        x: 0
-        y: -1
-      expect(second.vector).toBeEqualTo
-        x: 0
-        y: 1
+      expect(first.vector.x).toBeCloseTo 0
+      expect(first.vector.y).toBeCloseTo -1
+      expect(second.vector.x).toBeCloseTo 0
+      expect(second.vector.y).toBeCloseTo 1
     it 'at 45° should invert both vectors', ->
       asteroids.push first = new Asteroid 90, 90, {x: 1, y: 1}
       asteroids.push second = new Asteroid 110, 110, {x: -1, y: -1}
       engine.updateCollisions vessel, asteroids
       expect(engine.collisions.length).toBe 1
-      expect(first.vector).toBeEqualTo
-        x: -1
-        y: -1
-      expect(second.vector).toBeEqualTo
-        x: 1
-        y: 1
-  xit 'should rebound in a 2D plane', ->
-    asteroids.push first = new Asteroid 0, 0, {x: 0, y: 0}
-    asteroids.push second = new Asteroid -25, -25, {x: 1, y: 1}
-    engine.updateCollisions vessel, asteroids
-    expect(engine.collisions.length).toBe 1
-    expect(second.vector).toBeEqualTo
-      x: 1
-      y: 1
+      expect(first.vector.x).toBeCloseTo -1
+      expect(first.vector.y).toBeCloseTo -1
+      expect(second.vector.x).toBeCloseTo 1
+      expect(second.vector.y).toBeCloseTo 1

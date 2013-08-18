@@ -1,3 +1,5 @@
+Number.prototype.toDeg = ->
+  this * 180 / Math.PI
 
 debug = true
 showconsole = false
@@ -16,7 +18,24 @@ enableLog = (object, name) ->
   true
 
 distanceBetween = (pointA, pointB) ->
-  Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2))
+  refA = pointA.position or pointA
+  refB = pointB.position or pointB
+  Math.sqrt(Math.pow(refA.x - refB.x, 2) + Math.pow(refA.y - refB.y, 2))
+
+speedOf = (object) ->
+  Math.sqrt(Math.pow(object.vector.x, 2) + Math.pow(object.vector.y, 2))
+
+directionOf = (object) ->
+  Math.atan2 object.vector.y, object.vector.x
+
+willCollide = (objectA, objectB) ->
+  futurePositionA =
+    x: objectA.position.x + objectA.vector.x
+    y: objectA.position.y + objectA.vector.y
+  futurePositionB =
+    x: objectB.position.x + objectB.vector.x
+    y: objectB.position.y + objectB.vector.y
+  distanceBetween(futurePositionA, futurePositionB) <= (objectA.size + objectB.size) / 2
 
 log = (text) ->
   console.log text
@@ -173,7 +192,8 @@ class Asteroid
     image = new window.Image()
     image.src = url
     image
-  constructor: (posX = 100, posY = 40, @vector) ->
+  constructor: (posX = 100, posY = 40, @vector, @size = 40, @mass) ->
+    @mass = @size unless @mass?
     unless @vector?
       @vector =
         x: 0
@@ -183,7 +203,6 @@ class Asteroid
       y: posY
     @vertices = Asteroid.generate @size, @facets
     @image = Asteroid.createImage @vertices, @size
-  size: 40
   speed: 1
   facets: 32
   direction:
@@ -226,8 +245,8 @@ translate = (rad, x, y) ->
   y: Math.sin(rad) * x + Math.cos(rad) * y
 
 class Vessel
-  constructor: (x, y) ->
-    @acceleration = .1
+  constructor: (x, y, @mass = 20) ->
+    @acceleration = .3
     @position =
       x: x or surface.width / 2
       y: y or surface.height / 2
@@ -327,6 +346,17 @@ class Engine
           drawnAt.x += surface.width if drawnAt.x + surface.width < @width
           drawnAt.y += surface.height if drawnAt.y + surface.height < @height
           asteroid.drawAt(drawnAt.x, drawnAt.y) if -asteroid.size <= drawnAt.x <= @width and -asteroid.size <= drawnAt.y <= @height
+
+        if game.engine.debug?
+          context.beginPath()
+          context.strokeStyle = 'red'
+          context.lineWidth = 2
+          x = game.engine.debug.contactPoint.x - @x
+          y = game.engine.debug.contactPoint.y - @y
+          context.arc x, y, 5, 0, 2 * Math.PI
+          context.fillText game.engine.debug.angle, x, y
+          context.stroke()
+
         game.engine.vessel.drawAt @x, @y
         game.engine.hud.draw()
     )()
@@ -489,30 +519,71 @@ class Engine
 
   updateCollisions: (vessel, asteroids) ->
     # reset old collisions
-    for collision in @collisions
-      collision.source.collides = false
-      collision.target.collides = false
+    #for collision in @collisions
+    #  collision.source.collides = false
+    #  collision.target.collides = false
 
     firstpass = []
     for asteroid, id in asteroids
-      if distanceBetween(vessel.position, asteroid.position) <= (asteroid.size + vessel.size) / 2
+      if willCollide vessel, asteroid
+        distance = distanceBetween vessel, asteroid
+        gap = distance - (vessel.size + asteroid.size) / 2
+        vesselGap = speedOf(vessel) * gap / (speedOf(vessel) + speedOf(asteroid))
+        asteroidGap = speedOf(asteroid) * gap / (speedOf(vessel) + speedOf(asteroid))
+        vessel.position.x += Math.cos(directionOf(vessel)) * vesselGap
+        vessel.position.y += Math.sin(directionOf(vessel)) * vesselGap
+        asteroid.position.x += Math.cos(directionOf(asteroid)) * asteroidGap
+        asteroid.position.y += Math.sin(directionOf(asteroid)) * asteroidGap
         firstpass.push
           source: vessel
           target: asteroid
-      for secondAsteroid in asteroids[id+1..] when distanceBetween(asteroid.position, secondAsteroid.position) <= (asteroid.size + secondAsteroid.size) / 2
+      for secondAsteroid in asteroids[id+1..] when willCollide asteroid, secondAsteroid
         firstpass.push
           source: asteroid
           target: secondAsteroid
 
-    @collisions = firstpass
     for collision in @collisions
+      collision.active = false
+      collision.source.collides = false
+      collision.target.collides = false
+
+    newCollisions = []
+    for current in firstpass
+      alreadyExists = false
+      for collision in @collisions
+        if current.source == collision.source and current.target == collision.target
+          alreadyExists = true
+          collision.active = true
+      newCollisions.push current unless alreadyExists
+    @collisions = (for collision in @collisions when collision.active
       collision.source.collides = true
       collision.target.collides = true
-      collision.source.vector.x = -collision.source.vector.x
-      collision.source.vector.y = -collision.source.vector.y
-      collision.target.vector.x = -collision.target.vector.x
-      collision.target.vector.y = -collision.target.vector.y
-  #game.engine.collisions.push 'Vessel crashed into asteroid!' if collisions.length > 0
+      collision)
+
+    for collision in newCollisions when not collision.target.collides and not collision.source.collides
+      source = collision.source
+      target = collision.target
+      source.collides = true
+      target.collides = true
+      collision.contactPoint =
+        x: (source.position.x * target.size + target.position.x * source.size) / (source.size + target.size)
+        y: (source.position.y * target.size + target.position.y * source.size) / (source.size + target.size)
+      collision.angle = Math.atan2(collision.contactPoint.y - source.position.y, collision.contactPoint.x - source.position.x)
+      collision.active = true
+      sourceSpeed = speedOf source
+      targetSpeed = speedOf target
+      sourceAngle = Math.atan2(source.vector.y, source.vector.x)
+      targetAngle = Math.atan2(target.vector.y, target.vector.x)
+      game.engine.debug = collision
+      log "Collision: #{sourceAngle.toDeg()}, #{targetAngle.toDeg()}: #{collision.angle.toDeg()}"
+      sourceRotatedSpeed = (sourceSpeed * Math.cos(sourceAngle - collision.angle) * (source.mass - target.mass) + 2 * target.mass * targetSpeed * Math.cos(targetAngle - collision.angle)) / (source.mass + target.mass)
+      targetRotatedSpeed = (targetSpeed * Math.cos(targetAngle - collision.angle) * (target.mass - source.mass) + 2 * source.mass * sourceSpeed * Math.cos(sourceAngle - collision.angle)) / (source.mass + target.mass)
+      source.vector.x = sourceRotatedSpeed * Math.cos(collision.angle) + sourceSpeed * Math.sin(sourceAngle - collision.angle) * Math.cos(collision.angle + 2 * Math.PI)
+      source.vector.y = sourceRotatedSpeed * Math.sin(collision.angle) + sourceSpeed * Math.sin(sourceAngle - collision.angle) * Math.sin(collision.angle + 2 * Math.PI)
+      target.vector.x = targetRotatedSpeed * Math.cos(collision.angle) + targetSpeed * Math.sin(targetAngle - collision.angle) * Math.cos(collision.angle + 2 * Math.PI)
+      target.vector.y = targetRotatedSpeed * Math.sin(collision.angle) + targetSpeed * Math.sin(targetAngle - collision.angle) * Math.sin(collision.angle + 2 * Math.PI)
+      @collisions.push collision
+    @collisions = (collision for collision in @collisions when collision.active)
 
   updateVessel: (vessel) ->
     vessel.position.x += vessel.vector.x
@@ -568,9 +639,34 @@ window.game = game =
         if counter == 0
           @engine = new Engine()
           @engine.enableCounters = true
-          @engine.init().pause()
+          @engine.init().play()
           window.vessel = game.engine.vessel
           window.asteroids = game.engine.asteroids
+          if false
+            asteroids.pop() for asteroid in window.asteroids
+            asteroids.push new Asteroid 1500, 1200, {x: 0, y: 0}, 100
+            #asteroids.push new Asteroid 1900, 800, {x: 1, y: 0}
+            #asteroids.push new Asteroid 2100, 800, {x: -1, y: 0}
+            #asteroids.push new Asteroid 1900, 900, {x: 1, y: 0}
+            #asteroids.push new Asteroid 2100, 900, {x: 0, y: 0}, 100
+            #asteroids.push new Asteroid 2200, 1200, {x: 0, y: 0}
+            #asteroids.push new Asteroid 2200, 1100, {x: 0, y: 1}
+            #asteroids.push new Asteroid 2300, 1200, {x: 0, y: -1}
+            #asteroids.push new Asteroid 2300, 1100, {x: 0, y: 0}
+            #asteroids.push new Asteroid 2400, 1200, {x: 0, y: -1}
+            #asteroids.push new Asteroid 2400, 1100, {x: 0, y: 1}
+
+            asteroids.push new Asteroid 2100, 1100, {x: 2, y: 2}, 10
+            asteroids.push new Asteroid 1900, 1100, {x: -2, y: 2}, 10
+            asteroids.push new Asteroid 1900, 900, {x: -2, y: -2}, 10
+            asteroids.push new Asteroid 2100, 900, {x: 2, y: -2}, 10
+            asteroids.push new Asteroid 2300, 1300, {x: -2, y: -2}, 100
+            asteroids.push new Asteroid 1700, 1300, {x: 2, y: -2}, 100
+            asteroids.push new Asteroid 1700, 700, {x: 2, y: 2}, 100
+            asteroids.push new Asteroid 2300, 700, {x: -2, y: 2}, 100
+            vessel.position =
+              x: 2000
+              y: 1000
 
     for url of @images
           counter++

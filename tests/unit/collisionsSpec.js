@@ -83,7 +83,7 @@
       expect(vessel.collides).toBeFalsy();
       return expect(asteroid.collides).toBeFalsy();
     });
-    describe('head on between asteroids', function() {
+    return describe('head on between asteroids', function() {
       it('should invert their X vector', function() {
         var first, second;
         asteroids.push(first = new Asteroid(80, 0, {
@@ -96,14 +96,10 @@
         }));
         engine.updateCollisions(vessel, asteroids);
         expect(engine.collisions.length).toBe(1);
-        expect(first.vector).toBeEqualTo({
-          x: -1,
-          y: 0
-        });
-        return expect(second.vector).toBeEqualTo({
-          x: 1,
-          y: 0
-        });
+        expect(first.vector.x).toBeCloseTo(-1);
+        expect(first.vector.y).toBeCloseTo(0);
+        expect(second.vector.x).toBeCloseTo(1);
+        return expect(second.vector.y).toBeCloseTo(0);
       });
       it('should invert their Y vector', function() {
         var first, second;
@@ -117,14 +113,10 @@
         }));
         engine.updateCollisions(vessel, asteroids);
         expect(engine.collisions.length).toBe(1);
-        expect(first.vector).toBeEqualTo({
-          x: 0,
-          y: -1
-        });
-        return expect(second.vector).toBeEqualTo({
-          x: 0,
-          y: 1
-        });
+        expect(first.vector.x).toBeCloseTo(0);
+        expect(first.vector.y).toBeCloseTo(-1);
+        expect(second.vector.x).toBeCloseTo(0);
+        return expect(second.vector.y).toBeCloseTo(1);
       });
       return it('at 45° should invert both vectors', function() {
         var first, second;
@@ -138,31 +130,10 @@
         }));
         engine.updateCollisions(vessel, asteroids);
         expect(engine.collisions.length).toBe(1);
-        expect(first.vector).toBeEqualTo({
-          x: -1,
-          y: -1
-        });
-        return expect(second.vector).toBeEqualTo({
-          x: 1,
-          y: 1
-        });
-      });
-    });
-    return xit('should rebound in a 2D plane', function() {
-      var first, second;
-      asteroids.push(first = new Asteroid(0, 0, {
-        x: 0,
-        y: 0
-      }));
-      asteroids.push(second = new Asteroid(-25, -25, {
-        x: 1,
-        y: 1
-      }));
-      engine.updateCollisions(vessel, asteroids);
-      expect(engine.collisions.length).toBe(1);
-      return expect(second.vector).toBeEqualTo({
-        x: 1,
-        y: 1
+        expect(first.vector.x).toBeCloseTo(-1);
+        expect(first.vector.y).toBeCloseTo(-1);
+        expect(second.vector.x).toBeCloseTo(1);
+        return expect(second.vector.y).toBeCloseTo(1);
       });
     });
   });
