@@ -203,6 +203,7 @@ class Asteroid
       y: posY
     @vertices = Asteroid.generate @size, @facets
     @image = Asteroid.createImage @vertices, @size
+    @resistance = @mass
   speed: 1
   facets: 32
   direction:
@@ -246,7 +247,7 @@ translate = (rad, x, y) ->
 
 class Vessel
   constructor: (x, y, @mass = 20) ->
-    @acceleration = .3
+    @acceleration = .1
     @position =
       x: x or surface.width / 2
       y: y or surface.height / 2
@@ -255,6 +256,7 @@ class Vessel
     @vector =
       x: 0
       y: 0
+    @cooldown = 0
   size: 20
   drawAt: (x, y)->
     context.beginPath()
@@ -272,7 +274,14 @@ class Vessel
     context.moveTo points[0].x, points[0].y
     context.lineTo(point.x, point.y) for point in points[1..]
     context.fill()
-
+  createBullet: ->
+    position =
+      x: Math.cos(@orientation) * @size / 2 + @position.x
+      y: Math.sin(@orientation) * @size / 2 + @position.y
+    vector =
+      x: Math.cos(vessel.orientation) * 5 + vessel.vector.x
+      y: Math.sin(vessel.orientation) * 5 + vessel.vector.y
+    new Bullet position, vector
   distanceFrom : (object) ->
     Math.sqrt(Math.pow(object.position.x - @position.x, 2) + Math.pow(object.position.y - @position.y, 2))
 
@@ -283,12 +292,14 @@ keymap =
   40: 'reverse'
   27: 'escape'
   32: 'stop'
+  17: 'shoot'
 
 class Engine
   constructor: ->
     @hud = new Hud()
     @asteroids = createAsteroidStore()
     @vessel = new Vessel()
+    @bullets = []
     keyboard = {}
     for code, key of keymap
       keyboard[key] = false
@@ -347,6 +358,16 @@ class Engine
           drawnAt.y += surface.height if drawnAt.y + surface.height < @height
           asteroid.drawAt(drawnAt.x, drawnAt.y) if -asteroid.size <= drawnAt.x <= @width and -asteroid.size <= drawnAt.y <= @height
 
+        for bullet in game.engine.bullets
+          drawnAt =
+            x: bullet.position.x - @x
+            y: bullet.position.y - @y
+          drawnAt.x -= surface.width if drawnAt.x > surface.width
+          drawnAt.y -= surface.height if drawnAt.y > surface.height
+          drawnAt.x += surface.width if drawnAt.x + surface.width < @width
+          drawnAt.y += surface.height if drawnAt.y + surface.height < @height
+          bullet.drawAt(drawnAt.x, drawnAt.y) if 0 <= drawnAt.x <= @width and 0 <= drawnAt.y <= @height
+          
         if game.engine.debug?
           context.beginPath()
           context.strokeStyle = 'red'
@@ -515,6 +536,7 @@ class Engine
     unless @isPaused()
       @updateCollisions @vessel, @asteroids
       @updateAsteroids()
+      @updatePositions @bullets
       @updateVessel @vessel
 
   updateCollisions: (vessel, asteroids) ->
@@ -526,14 +548,6 @@ class Engine
     firstpass = []
     for asteroid, id in asteroids
       if willCollide vessel, asteroid
-        distance = distanceBetween vessel, asteroid
-        gap = distance - (vessel.size + asteroid.size) / 2
-        vesselGap = speedOf(vessel) * gap / (speedOf(vessel) + speedOf(asteroid))
-        asteroidGap = speedOf(asteroid) * gap / (speedOf(vessel) + speedOf(asteroid))
-        vessel.position.x += Math.cos(directionOf(vessel)) * vesselGap
-        vessel.position.y += Math.sin(directionOf(vessel)) * vesselGap
-        asteroid.position.x += Math.cos(directionOf(asteroid)) * asteroidGap
-        asteroid.position.y += Math.sin(directionOf(asteroid)) * asteroidGap
         firstpass.push
           source: vessel
           target: asteroid
@@ -541,6 +555,10 @@ class Engine
         firstpass.push
           source: asteroid
           target: secondAsteroid
+      for bullet in @bullets when willCollide asteroid, bullet
+        firstpass.push
+          source: asteroid
+          target: bullet
 
     for collision in @collisions
       collision.active = false
@@ -560,9 +578,17 @@ class Engine
       collision.target.collides = true
       collision)
 
-    for collision in newCollisions when not collision.target.collides and not collision.source.collides
+    for collision in newCollisions #when not collision.target.collides and not collision.source.collides
       source = collision.source
       target = collision.target
+      distance = distanceBetween source, target
+      gap = distance - (source.size + target.size) / 2
+      sourceGap = speedOf(source) * gap / (speedOf(source) + speedOf(target))
+      targetGap = speedOf(target) * gap / (speedOf(source) + speedOf(target))
+      source.position.x += Math.cos(directionOf(source)) * sourceGap
+      source.position.y += Math.sin(directionOf(source)) * sourceGap
+      target.position.x += Math.cos(directionOf(target)) * targetGap
+      target.position.y += Math.sin(directionOf(target)) * targetGap
       source.collides = true
       target.collides = true
       collision.contactPoint =
@@ -582,6 +608,15 @@ class Engine
       source.vector.y = sourceRotatedSpeed * Math.sin(collision.angle) + sourceSpeed * Math.sin(sourceAngle - collision.angle) * Math.sin(collision.angle + 2 * Math.PI)
       target.vector.x = targetRotatedSpeed * Math.cos(collision.angle) + targetSpeed * Math.sin(targetAngle - collision.angle) * Math.cos(collision.angle + 2 * Math.PI)
       target.vector.y = targetRotatedSpeed * Math.sin(collision.angle) + targetSpeed * Math.sin(targetAngle - collision.angle) * Math.sin(collision.angle + 2 * Math.PI)
+
+      if target.damage?
+        source.resistance -= target.damage
+        collision.active = false
+        source.collides = false
+        @bullets.splice(@bullets.indexOf(target), 1)
+        if source.resistance <= 0
+          @asteroids.splice @asteroids.indexOf(source), 1
+
       @collisions.push collision
     @collisions = (collision for collision in @collisions when collision.active)
 
@@ -613,15 +648,31 @@ class Engine
     vessel.orientation -= vessel.rotationalSpeed if @keyboard['left']
     vessel.orientation += vessel.rotationalSpeed if @keyboard['right']
     vessel.orientation = vessel.orientation % (2 * Math.PI)
+    vessel.cooldown--
+    if @keyboard.shoot and vessel.cooldown <= 0
+      vessel.cooldown = 10
+      @bullets.push vessel.createBullet()
 
   updateAsteroids: ->
-    for asteroid in @asteroids
-      asteroid.position.x += asteroid.vector.x
-      asteroid.position.x = 0 if asteroid.position.x > game.engine.surface.width
-      asteroid.position.x = game.engine.surface.width if asteroid.position.x < 0
-      asteroid.position.y += asteroid.vector.y
-      asteroid.position.y = 0 if asteroid.position.y > game.engine.surface.height
-      asteroid.position.y = game.engine.surface.height if asteroid.position.y < 0
+    @updatePositions @asteroids
+
+  updatePositions: (collection) ->
+    for item in collection
+      item.position.x += item.vector.x
+      item.position.x = 0 if item.position.x > game.engine.surface.width
+      item.position.x = game.engine.surface.width if item.position.x < 0
+      item.position.y += item.vector.y
+      item.position.y = 0 if item.position.y > game.engine.surface.height
+      item.position.y = game.engine.surface.height if item.position.y < 0
+
+class Bullet
+  constructor: (@position, @vector, @mass = .1, @size = 10) ->
+    @damage = 100 * @mass
+  drawAt: (x, y) ->
+    context.beginPath()
+    context.fillStyle = 'orange'
+    context.arc x, y, @size / 2, 0, 2 * Math.PI
+    context.fill()
 
 window.game = game =
   buttons: []
