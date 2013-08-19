@@ -8,22 +8,25 @@ module.exports = function(config) {
     basePath: '',
 
 
-    // frameworks to use
-    frameworks: ['jasmine'],
-
-    plugins: ['karma-jasmine', 'karma-osx-reporter'],
-
     // list of files / patterns to load in the browser
     files: [
-        {pattern: 'js/*.js'},
-        {pattern: 'tests/helpers/*.js'},
-        {pattern: 'tests/**/*Spec.js'}
+        'lib/require.js',
+        'tests/test-main.js',
+        {pattern: 'lib/*.js', included: false},
+        {pattern: 'js/*.js', included: false},
+        {pattern: 'tests/helpers/*.js', included: false},
+        {pattern: 'tests/**/*Spec.js', included: false}
     ],
 
     // list of files to exclude
     exclude: [
         'js/main.js'
     ],
+
+    // frameworks to use
+    frameworks: ['jasmine'],
+
+    plugins: ['karma-jasmine', 'karma-osx-reporter'],
 
 
     // tests results reporter to use

@@ -1,1 +1,4 @@
-game.load()
+require [
+  'game'
+], (game) ->
+  game.load()
