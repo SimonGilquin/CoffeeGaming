@@ -1,4 +1,4 @@
-require ['game'], (game) ->
+define ['game'], (game) ->
   describe 'Upon initialization', ->
     canvas = null
     engine = null

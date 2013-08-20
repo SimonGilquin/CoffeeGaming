@@ -1,6 +1,7 @@
-require ['game'], (game) ->
+define ['game'], (game) ->
   describe 'The main canvas', ->
     it 'has the size of the browser window', ->
+      canvas = getCanvas()
       expect(canvas.width).toBe window.innerWidth
       expect(canvas.height).toBe window.innerHeight
 
@@ -8,10 +9,12 @@ require ['game'], (game) ->
     engine = null
     viewport = null
     contextMock = null
+    canvas = null
     beforeEach ->
       engine = game.engine
       viewport = engine.viewport
       contextMock = createMockFor CanvasRenderingContext2D
+      canvas = getCanvas()
     it 'exists', ->
       expect(engine.viewport).toBeDefined()
     it 'has the same size as the canvas', ->

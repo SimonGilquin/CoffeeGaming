@@ -1,8 +1,9 @@
-require ['game'], (game) ->
+define ['game'], (game) ->
   describe 'The HUD', ->
     hud = null
     inResume = null
     engine = null
+    canvas = getCanvas()
     beforeEach ->
       game.engine = engine = new Engine()
       game.engine.init()

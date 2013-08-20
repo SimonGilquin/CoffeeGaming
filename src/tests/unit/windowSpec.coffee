@@ -1,4 +1,4 @@
-require ['game'], (game) ->
+define ['game'], (game) ->
   describe 'The main window', ->
     it 'should have one canvas', ->
       canvas = getCanvas()

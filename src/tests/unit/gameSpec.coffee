@@ -1,4 +1,4 @@
-require ['game'], (game) ->
+define ['game'], (game) ->
   describe 'The game engine', ->
     engine = null
     beforeEach ->
