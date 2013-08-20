@@ -7,10 +7,12 @@ module.exports = function(config) {
     // base path, that will be used to resolve files and exclude
     basePath: '',
 
+    // frameworks to use
+    frameworks: ['jasmine', 'requirejs'],
 
     // list of files / patterns to load in the browser
     files: [
-        'lib/require.js',
+//        'lib/require.js',
         'tests/test-main.js',
         {pattern: 'lib/*.js', included: false},
         {pattern: 'js/*.js', included: false},
@@ -23,10 +25,8 @@ module.exports = function(config) {
         'js/main.js'
     ],
 
-    // frameworks to use
-    frameworks: ['jasmine'],
 
-    plugins: ['karma-jasmine', 'karma-osx-reporter'],
+    plugins: ['karma-jasmine', 'karma-requirejs', 'karma-osx-reporter'],
 
 
     // tests results reporter to use
