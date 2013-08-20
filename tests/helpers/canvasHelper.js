@@ -42,9 +42,11 @@
 
   window.Image = ImageHelper;
 
-  game.images['space.jpg'] = {
-    width: 4000,
-    height: 3000
-  };
+  require(['game'], function(game) {
+    return game.images['space.jpg'] = {
+      width: 4000,
+      height: 3000
+    };
+  });
 
 }).call(this);

@@ -1,4 +1,5 @@
-tests = (file for own file of window.__karma__.files when /Spec\.js$/.test file)
+tests = (file for own file of window.__karma__.files when /helpers\/.*\.js$/.test file)
+tests.push file for own file of window.__karma__.files when /Spec\.js$/.test file
 
 requirejs.config
   # Karma serves files from '/base'

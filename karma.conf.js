@@ -26,12 +26,12 @@ module.exports = function(config) {
     ],
 
 
-    plugins: ['karma-jasmine', 'karma-requirejs', 'karma-osx-reporter'],
+    //plugins: ['karma-jasmine', 'karma-requirejs', 'karma-osx-reporter'],
 
 
     // tests results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['progress', 'osx', 'coverage', 'growl'],
+    reporters: ['progress', 'osx'],
 
 
     // web server port

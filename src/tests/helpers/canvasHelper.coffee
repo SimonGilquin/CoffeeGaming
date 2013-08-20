@@ -13,6 +13,10 @@ class ImageHelper
   @loadAll: ->
     item.onload() for item in ImageHelper.items
 window.Image = ImageHelper
-game.images['space.jpg'] =
-  width: 4000
-  height: 3000
+
+require ['game'], (game) ->
+  game.images['space.jpg'] =
+    width: 4000
+    height: 3000
+
+

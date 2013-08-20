@@ -1,14 +1,13 @@
-window.canvas = getCanvas()
 window.moveMouseTo = (x, y) ->
-  canvas.onmousemove
+  window.getCanvas().onmousemove
     offsetX: x
     offsetY: y
 window.mouseUpAt = (x, y) ->
-  canvas.onmouseup
+  window.getCanvas().onmouseup
     offsetX: x
     offsetY: y
 window.mouseDownAt = (x, y) ->
-  canvas.onmousedown
+  window.getCanvas().onmousedown
     offsetX: x
     offsetY: y
 window.pressKey = (keyCode) ->
